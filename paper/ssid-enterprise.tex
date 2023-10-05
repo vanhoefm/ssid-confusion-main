@@ -1,9 +1,11 @@
 % Elements that got dropped:
 % - Table with the properties of the network cards that we tested
 % - Document in the experimental setup how we injected frames with source address equal to a the monitor interface and one not equal to the monitor interface.
-\documentclass[sigconf]{acmart}
+%TODO: Include the anonymous tag
+\documentclass[sigconf,review]{acmart}
 %\settopmatter{printfolios=true}
 \usepackage[inline]{enumitem}
+\usepackage{xcolor}
 
 \copyrightyear{2023}
 \acmYear{2023}
@@ -29,48 +31,30 @@
 % ======== Utility commands =========
 
 \newcommand{\wifi}{\mbox{Wi-Fi}}
-\newcommand{\red}[1]{\textcolor{red}{#1}}
+\DeclareRobustCommand{\red}[1]{\textcolor{red}{#1}}
 %\newcommand{\red}[1]{#1}
 
 \begin{document}
 
-\title{Testing and Improving the Correctness of \wifi{} Frame Injection}
+\title{SSID Confusion Attacks against Protected \wifi{} Networks}
+
+\author{Héloïse Gollier}
+\affiliation{%
+	\institution{DistriNet, KU Leuven}
+	\city{Leuven}
+	\country{Belgium}
+}
+\email{heloise.gollier@kuleuven.be}
+\orcid{0000-0000-0000-0000}
 
 \author{Mathy Vanhoef}
 \affiliation{%
-	\institution{imec-DistriNet, KU Leuven}
+	\institution{DistriNet, KU Leuven}
 	\city{Leuven}
 	\country{Belgium}
 }
 \email{Mathy.Vanhoef@kuleuven.be}
 \orcid{0000-0002-8971-9470}
-
-\author{Xianjun Jiao}
-\affiliation{%
-	\institution{IDLab, imec - Ghent Univeristy}
-	\city{Gent}
-	\country{Belgium}
-}
-\email{xianjun.jiao@imec.be}
-\orcid{0000-0003-0072-6533}
-
-\author{Wei Liu}
-\affiliation{%
-	\institution{IDLab, imec - Ghent Univeristy}
-	\city{Gent}
-	\country{Belgium}
-}
-\email{wei.liu@imec.be}
-\orcid{0000-0002-6573-2881}
-
-\author{Ingrid Moerman}
-\affiliation{%
-	\institution{IDLab, imec - Ghent Univeristy}
-	\city{Gent}
-	\country{Belgium}
-}
-\email{ingrid.moerman@imec.be}
-\orcid{0000-0003-2377-3674}
 
 \renewcommand{\shortauthors}{Mathy Vanhoef, Xianjun Jiao, Wei Liu \& Ingrid Moerman}
 
@@ -115,76 +99,20 @@
 % \received[accepted]{5 June 2009}
 
 \begin{abstract}
-Investigating the security of \wifi{} devices often requires writing scripts that send unexpected or malformed frames, to subsequently monitor how the devices respond.
-Such tests generally use Linux and off-the-self \wifi{} dongles.
-Typically, the dongle is put into monitor mode to get access to the raw content of received \wifi{} frames and to inject, i.e., transmit, customized frames.
-% so all nearby \wifi{} frames are captured, and monitor mode is also used to inject, i.e., transmit, custom frames.
-
-In this paper, we demonstrate that monitor mode on Linux may, unbeknownst to the user, mistakenly inject \wifi{} frames or even drop selected frames instead of sending them.
-We discuss cases where this causes security testing tools to misbehave, making users believe that a device under test is secure while in reality it is vulnerable to an attack.
-%
-%we standardize an extension to the Radiotap injection header to have more control over injected frames.
-To remedy this problem,
-we create a script to test raw frame injection,
-and we extend the Radiotap standard to gain more control over frame injection.
-Our extension is now part of the Radiotap standard and has been implemented in Linux.
-We tested it using commercial \wifi{} dongles and using openwifi, which is an open implementation of \wifi{} on top of software-defined radios.
-With our improved setup, we reproduced tests for the KRACK and FragAttack vulnerabilities, and discovered previously unknown vulnerabilities in three smartphones.
+Write an abstract here.
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
 
-A large number of \wifi{} experiments are performed using Linux scripts with commercial off-the-shelf network cards.
-This is especially the case in security research, where often unexpected or malformed frames are sent towards a device under test.
-For instance, the aircrack-ng toolsuite, which is arguably one of the most well-known tools for offensive \wifi{} research, is designed to be used on Linux with commodity \wifi{} dongles. %~\cite{aircrack-main}.
-The same is true for other \wifi{} tools such as mdk4. %\footnote{See \url{https://github.com/aircrack-ng/mdk4}}
-However, these commercial network cards are often black-boxes over which researchers have no control, meaning there is no guarantee that injected frames are transmitted as intended by the (user space) Linux scripts.
+Hello world!
 
-Overall,
-%a large number of \wifi{} security tools rely on raw frame injection to implement test scripts and perform experiments,
-\wifi{} scripts on Linux generally make use of monitor mode to have control over the full (raw) frames that are transmitted,
-but the reliability of raw \wifi{} frame injection on Linux has never been studied.
-This means it is unclear how reliable such scripts are in practice.
-We provide a sobering answer to this question: depending on the experimental setup, various problems may arise when injecting \wifi{} frames, and these problems can cause scripts to misbehave.
-To understand the extent of this problem, we study \wifi{} frame injection in detail, and propose, implement, and standardize improvements to make frame injection more reliable.
-%\red{To remedy this situation}, we extend the Radiotap standard and implement our extensions on Linux, giving users and researchers more control over how \wifi{} frames are injected.
-%TODO: \red{---And a tool to verify if injected frames look correct?---}
-
-To evaluate the correctness of raw \wifi{} frame injection, we create a tool to perform various injection tests under different configurations of the network card,
-and this tool checks whether frames are transmitted as intended~\cite{repository}.
-%TODO: "These tests revealed.."
-These tests revealed that header fields may be overwritten before transmission,
-that injected frames may be reordered, that some types of injected frames may get unexpectedly dropped by the driver or network card, and that frames may be unintentionally sent when the receiver is in sleep mode.
-% We indeed discuss this at least once, e.g., sleep mode.
-In this paper,
-we discuss how these injection problems may impact the correctness of \wifi{} experiments and tests.
-
-To improve the correctness of frame injection,
-%and gain more control over how frames are transmitted,
-we extend Radiotap, which is a cross-platform Application Programming Interface~(API) that is used when injecting and capturing raw \wifi{} frames.
-We implement these extensions on Linux and test them with off-the-shelf \wifi{} dongles and with openwifi, which is an open \wifi{} implementation that uses software defined radios~\cite{jiao2020openwifi}.
-Our extensions have been included in an update to the Radiotap standard,
-%meaning other platforms can also build upon this,
-and our new Radiotap code and injection fixes are meanwhile part of the official Linux kernel since kernel version 5.11.
-% We extend this API with extra parameters and implement these extensions on Linux.
-
-To demonstrate the impact of the injection fixes, we replicate recent \wifi{} attacks to test (new) devices in a more reliable manner.
-In particular, we reproduce tests for the KRACK and FragAttacks vulnerabilities~\cite{vanhoef-ccs2017,vanhoef-usenix2021-fragattacks}.
-This led to the discovery of previously unknown vulnerabilities in three smartphones, which we disclosed to the affected vendors.
-%
 To summarize, our contributions are:
 \begin{itemize}
-    \item We test the injection of various \wifi{} frames under different conditions and give an overview of issues that can occur when injecting raw \wifi{} frames (Section~\ref{sec:injectionproblems}).
-
-    \item We extend the Radiotap standard to better control frame injection, implement our extensions on Linux, and make the extensions compatible with openwifi~\cite{jiao2020openwifi} (Section~\ref{sec:improvedinjection}).
-
-    \item We evaluate our injection improvements by replicating test for the KRACK and FragAttacks vulnerabilities.
-    This allowed us to (more reliably) discover three new vulnerable devices.
-    %By testing (variants of) known attacks using our improvements this allowed us to uncover three new vulnerabilities (Section~\ref{sec:evaluation}).
+    \item 
 \end{itemize}
-Finally, we give an overview of related work regarding frame injection in Section~\ref{sec:relatedwork}, and conclude in Section~\ref{sec:conclusion}.
+Finally, we give an overview of related work in Section~\ref{sec:relatedwork}, and we conclude in Section~\ref{sec:conclusion}.
 
 % \vspace{0.2cm}
 % \noindent
@@ -193,542 +121,127 @@ Finally, we give an overview of related work regarding frame injection in Sectio
 
 \section{Background}
 
-This section introduces the IEEE 802.11 standard that underpins \wifi{} and focuses on monitor mode and injection of  raw frames.
+This section will introduce relevant authentication methods defined in the IEEE 802.11 standard that underpins \wifi{}~\cite{ieee80211-2020}.
 
-\subsection{Header layout of encrypted 802.11 frames}
+\subsection{\red{\wifi{} Security}}
 
-\input{fig-framelayout}
+\red{Maybe talk about expectations, that the SSID really uniquely identifies the network, and users may trust their organization but not others?}
 
-Figure~\ref{fig:wififrame} shows the layout of an encrypted 802.11 frame.
-The frame starts with a control field that contains flags indicating
-%whether this is a retransmission,
-whether the client is entering sleep (power-save) mode and whether there are more fragments of the frame to follow.
-Next are the transmitter, sender, and final destination MAC address.
-The $12$-bit sequence number (Seq.~No.) is used to identify and ignore retransmissions, while the $4$-bit fragment number (Frag.~No.) is used to reassemble a fragmented frame.
-The packet number contains the nonce used to encrypt and authenticate the transported data.
-Finally, the 802.11e 0oS (Quality-of-Service) field contains a flag to indicate whether this is an aggregated (A-MSDU) frame and contains the Traffic Identifier~(TID) which represents the frame's priority.
+\subsection{Home and Enterprise Authentication}
 
-\subsection{The Radiotap standard}
-\label{sec:back:radiotap}
+Typically, we can identify two types of protected \wifi{} networks: home and Enterprise networks.
+Home networks are protected by a pre-shared password that all users posses.
+In contrast, Enterprise networks use the 802.1X protocol for authentication.
+This enables the network to use any Extensible Authentication Protocol (EAP) it desires: authentication can be done based on a username and password, using certificates, using one-time passwords, and so on.
 
-Normally, the operating system fills in all fields of a \wifi{} frame.
-However, some operating systems also support injection of raw 802.11 frames, where the user has full control over the frame's content.
-%To have full control over transmitted frames, some operating system support injecting raw 802.11 frames, where the user has full control over the contents of the transmitted frame.}
-When injecting such raw 802.11 frames, various parameters must also be provided: the transmission bitrate, the channel bandwidth to use, whether to retransmit the frame if it was not acknowledged, whether to use collision-avoidance methods such as CTS-to-self, etc.
-% TODO: The Radiotap header *MUST* be present? At least on Linux...
-User-space programs specify these parameters by prepending the \wifi{} frame with a Radiotap header.
-This header contains control info to specify exactly how the injected frame is transmitted~\cite{radiotap}.
-Note that the kernel also prepends received frames with a Radiotap header containing metadata related to the received frame, such as the bitrate, signal strength, and so on.
-%The kernel will also prepend recieved frames with a Radiotap header, in which case the radiotap headers contains metadata related to the received frames, such as the used bitrate, the channel it was received on, the signal strength, the antenna it was received on, and so on.
-As a result, Radiotap is typically used by specialized tools to inject and monitor traffic, but it is also used by standard programs such as hostap.
+\subsection{Infrastructure and Mesh Networks}
 
-%\red{---Radiotap is used by injection and monitoring tools but can also be used by other applications, e.g., it is also used by hostap.---}
+Broadly speaking, a \wifi{} network can operate in \red{multiple modes}, with two of the most common ones being infrastructure and mesh mode.
+In infrastructure networks, there is a single central Access Point~(AP), and all clients connect and authenticate with this AP.
+%TODO: More detail. Who to authenticiate with?
+\red{In contrast, in a mesh network there is no central fixed node.}
 
-Radiotap is a de facto standard.
-New fields are added by proposing a change, implementing it in wireshark or tcpdump, adding support for the new field to at least one driver, and posting the proposal to the Radiotap mailing list~\cite{radiotap}.
-%Members then have three weeks to discuss the change.
-If the proposal withstands discussion, the proposed change is re-posted in its final form, after which it is adopted one week later if there are no further objections.
+\subsection{Authentication Methods}
 
-\subsection{Frame injection on Linux}
-\label{sec:back:injectlinux}
+Overview of authentication. Mention that the certificate is verified, and/or the username and password, but never the SSID.
 
-%\input{fig-linux-architecture}
+Contrast with home network: the SSID is verified during the handshake.
+Cannot sneakily make a victim connect to a different network, even if both networks use the same password.
 
-The Linux kernel has built-in support for raw frame injection~\cite{linux-injection}.
-To use it, the wireless interface needs to be set in monitor mode, after which user space processes use the \verb|nl80211| interface to inject, i.e., transmit, raw \wifi{} frames over this interface.
-Commands sent over \verb|nl80211| are handled by the \verb|cfg80211| kernel module,
-% TODO: Maybe they just have to handle ALL frames...?
-which will in turn call a transmit callback function that was registered by the driver during the initialization of the network interface.
-
-There are two types of Linux \wifi{} drivers: Full-MAC and Soft-MAC ones.
-A Full-MAC driver implements the MAC sublayer Management Entity (MLME) in hardware or firmware.
-% Note: part of MLME can also be implemented in user space: http://www.haifux.org/lectures/206/wirelessLec.pdf
-The MLME layer is responsible for handling operations such as scanning, (open) authentication, association, and so on.
-A Soft-MAC driver relies on the \verb|mac80211| kernel module to handle (parts of) the MLME in software.
-A Full-MAC driver registers callbacks in \verb|cfg80211| using the \verb|cfg80211_ops| structure, while a Soft-MAC driver registers callbacks in \verb|mac80211| using the \verb|ieee80211_ops| structure.
-
-All combined, with Full-MAC drivers,
-% Note: Libertas driver indeed handles Radiotap in the *driver*
-injected frames are directly passed by \verb|cfg80211| to the driver, meaning the driver or hardware will parse the Radiotap header.
-In contrast, with Soft-MAC drivers, injected frames are passed by \verb|cfg80211| to the \verb|mac80211| kernel module, meaning \verb|mac80211| will parse the Radiotap header.
-
-When injecting a frame, it will appear twice when capturing packets on the interface used to inject the frame.
-The first copy appears before and is independent of whether the frame is actually transmitted, and it represents the frame as injected by the user space process.
-The second copy is the frame that is actually transmitted, containing extra details in the Radiotap header such as the bitrate that was used and whether an acknowledgement was received.
-
-Various flags exists to control how an interface in monitor mode behaves~\cite{aircrack-iw-flags}.
-An important flag is the \verb|activate| flag.
-When set, the network card actively acknowledges incoming unicast frames if they match the configured MAC address.
-% Important flags for us are:
-% \begin{description}
-	%     \item[otherbss] Frames from all networks should be returned.
-	%     \item[active] Actively acknowledge incoming unicast frames if they match the currently configured MAC address.
-	%     \item[control] Control frames should also be returned.
-	%     \item[fcsfail] Frames with FCS errors should also be returned.
-	% \end{description}
-However, at the time of writing, few network cards on Linux support this flag,
-and recent works instead used virtual interface to assure that incoming frames are acknowledged~\cite{vanhoef-usenix2021-fragattacks,schepers2021framework}  (see also Section~\ref{sec:problems:acks}).
-% Whether this flag is supported depends on the network card being used. For instance, not all network cards support actively acknowledging incoming frames.
-
-\subsection{Virtual interfaces on Linux}
-\label{sec:back:virtual}
-
-Linux can use a network card in several modes, such as client or Access Point~(AP) mode, while simultaneously operating the card in monitor mode.
-This is done using virtual interfaces: one virtual interface implements the client or AP behavior, while a second virtual interface can be used to monitor and inject frames.
-Recent works used this ability to quickly prototype proof-of-concepts~\mbox{\cite{vanhoef-usenix2021-fragattacks,schepers2021framework}}.
-%\red{---Mention advantage: reuse build-in functionality to connect, then use monitor to inject.---}
-
-When the network card is only used in monitor mode, then we say it is operating in \emph{pure monitor mode}.
-When the network card is used by one or more (virtual) interfaces in client or AP mode, and also by one or more (virtual) interfaces in monitor mode, then we say that the network card is operating in \emph{mixed monitor mode}.
-In case of mixed monitor mode, the term \emph{non-monitor interface(s)} refers to the interfaces that are operating in client or AP mode.
-
-%\input{table-behavior}
-
-% \subsection{Testing injection behaviour}
-\section{Testing for Frame Injection Issues}
-\label{sec:injectionproblems}
-
-In this section, we test the correction of raw frame injection,
-% and discuss cases in which network cards may transmit incorrect frames or not even transmit the frame at all.
-and discuss cases where injected frames are incorrectly transmitted.
-% \red{---TODO: Also discuss how it might impact experiments in practice?---}
-
-\subsection{Experimental setup}
-
-To test the correctness of frame injection for various network cards, we wrote a Python script using the Scapy library to inject several kinds of frames~\cite{repository}.
-A second independent network card is used in pure monitor mode to capture injected frames and verify whether the frame has been sent without any unexpected modifications.
-To reliably detect the injected frame, a unique random identifier is appended to every injected frame.
-If the frame was not detected, it is retransmitted once, meaning the frame is injected at most twice.
-
-In our experiments we consider various configurations.
-%During our experiments, we differentiate between three main configurations.
-First, we test the network card in pure monitor mode.
-Second, we test the card in mixed monitor mode.
-Here we perform the injection tests before the client is connecting, while the client is connecting, and once the client has successfully authenticated to the AP.
-%TODO: Improve this sentence!!!!
-% We take into account three factors... The third factor is whether the client virtual interface has successfully authenticated, or whether the AP virtual interface has an authenticated client.
-%Third, we test the card in mixed monitor mode, where the client \emph{has} successfully authenticated to the AP.
-In these scenarios, the injection tests were done both when the non-monitor interface is in client mode and when it is in AP mode.
-
-We tested the network cards recommended by the KRACK and FragAttack tools~\cite{vanhoef-ccs2017,vanhoef-usenix2021-fragattacks}.
-In particular, we tested the TP-Link TL-WN722N, Intel Wireless-AC 3160, and Alfa AWUS036ACM. %\footnote{See also the test tools for both attacks at \url{https://github.com/vanhoefm/krackattacks-scripts} and \url{https://github.com/vanhoefm/fragattacks}}
-These internally use an Atheros, Intel, and MediaTek chip, respectively.
-We also tested a network card with a RT5572 chipset.
-We used a (second) TL-WN722N and AWUS036ACM for the network card that monitors whether the network card under test is correctly injecting frames.
-All experiments are performed using an ZBook Power G8 running Arch Linux with kernel version 5.4.223-1-lts.
-
-% To perform practical tests, we also tested the reliability of the KRACK and FragAttacks vulnerability scanners with multiple commercial network cards, \red{and against multiple clients and access points}.
-
-\subsection{Acknowledgements and retransmissions}
-\label{sec:problems:acks}
-
-Our first observation is that the retransmission behavior depends on the type of network card being used.
-When no retransmissions are executed, this means that injected frames may not have arrived at their destination, while an excessive number of retransmissions may impact the reliability of time-sensitive experiments because unnecessary retransmissions delay the reception and transmission of other frames.
-%TODO: Give a concrete example of a test that may fail?
-Our experiments indicate that the retransmission behavior depends on:
-\begin{enumerate*}
-    \item the type of network card;
-    \item whether pure or mixed monitor mode is used (recall Section~\ref{sec:back:virtual}); and
-    \item whether the transmitter MAC address of the injected frame equals the MAC address of a non-monitor interface
-    % TODO: !!!!! Improve this sentence??????
-    that is associated to the network card.
-\end{enumerate*}
-%
-%\red{Table~\ref{table:behavior} summarizes the retransmission behavior of the tested network cards in various configurations.}
-We suspect that these behavioral differences could be abused to fingerprint and detect the network card used by an attacker.
-
-Whether an interface in monitor mode acknowledges received frames also depends on various factors.
-In theory, when in pure monitor mode, acknowledgements should only be sent if the \verb|active| flag was set (recall Section~\ref{sec:back:injectlinux}).
-However, none of our tested network cards support this flag.
-%However, out of the tested network cards, only the AWUS036ACM supports this flag.
-An inspection of the Linux kernel source code indicates that only two out of more than 60 \wifi{} drivers support this flag: the MediaTek mt76 and mt7601u driver.\footnote{This was determined by searching for the word \texttt{NL80211\_FEATURE\_ACTIVE\_MONITOR}.}
-Interestingly, we found that the WN-722N acknowledges received frames in pure monitor mode without setting the \verb|active| flag.
-%Nevertheless, we discovered that even when in pure monitor mode, the WN-722N acknowledges received frames without setting the \verb|active| flag. % (\red{see Table~\ref{table:}}).
-
-Not acknowledging frames can impact time-sensitive experiments and can cause experiments to fail.
-%TODO: It still depends on whether the kernel actually supplies the correct info on whether an ACK was received or not.
-For instance, since 2002, the \verb|hostapd| AP requires that authentication and association responses are acknowledged~\cite{linux-hostap-checkack}.
-%TODO: Seems like this really depends on NEED_AP_MLME
-Otherwise, the client will be disconnected, at least if this info is accurately provided.
-Since acknowledgement frames cannot be injected in a timely manner from user space, they must be generated in hardware. Hence, when the monitor interface does not acknowledge frames, one cannot simulate a client that can successfully connect to APs with such behavior.
-
-\subsection{Handling sleeping clients}
-\label{sec:problems:sleep}
-
-Another issue we observed is that scripts may inject frames when the client is in sleep mode.
-This can be problematic because this may lead some testing scripts, such as the FragAttacks tool, to wrongly believe that the client being tested is not vulnerable~\cite{vanhoef-usenix2021-fragattacks}.
-% \footnote{\red{See also} \url{https://github.com/vanhoefm/fragattacks#id-handling-sleep}}
-%TODO: !!!! The above link may change in the future, so citing it really is not ideal.
-Previous works mitigated this issue by using the network card in mixed monitor mode~\cite{vanhoef-usenix2021-fragattacks,schepers2021framework}.
-That is, one interface is operating as an AP while a second interface is in monitor mode.
-When a \wifi{} frame is then injected on the monitor interface,
-%  of the network card that was initialized by the access point interface
-the kernel will effectively add the frame to the AP's transmission queue, meaning the injected frame is only sent once the client wakes up.
-%\red{---But this still wasn't always reliable? Is our description correct here?---}
-Unfortunately, even in mixed mode we observed that some injected frames did not arrive at the client, or arrived significantly later than expected.
-It is unclear what caused this.
-
-We are not aware of a method to force clients to wake up.
-%This means we cannot provide an upper limit on when injected frames to a client are transmitted in mixed monitor mode.
-% !!!!!!!!!!! This is maybe also possible to check by seeing when the "echoed" packet is seen in monitor mode !!!!!!!!!
-Nevertheless, one can use a second network card in monitor mode to detect when the client under test wakes up, and more importantly when the injected frame is sent.
-If the frame is sent much later than expected,
-the user can be warned.
-Similarly, if the injected frame was not acknowledged, a warning can also be shown.
-Though this does not fundamentally solve the problem of handling sleeping clients, it does make the user aware that a test needs to be re-run.
-
-\subsection{Order of injected frames}
-
-% \red{---Mention that this can be hard to test: depends on background noise (how long frames are queued).
-% And in theory the received could also reorder frames of different priority? (Hidden behavior is not uncommon, consider A-MPDUs which are handled in firmware).---}
-
-When using a network card in mixed monitor mode, we found that frames may be transmitted in a different order compared to their injection from user space programs.
-We observed this behavior on all tested network cards.
-A code inspection of the Linux kernel revealed that frames may get reordered based on their QoS TID.
-This may cause \wifi{} tools to misbehave and give incorrect results.
-%This may cause user space scripts to give the wrong output.
-For instance, in some of the implementation-specific FragAttacks vulnerabilities, a device is only vulnerable \emph{before} the \mbox{4-way} handshake has completed.
-To test whether a device is vulnerable, a (plaintext) frame is sent during the handshake by the user space script.
-Unfortunately, because injected frames may get reordered, in reality the (plaintext) frame may get sent by the network card \emph{after} the handshake completes.
-This would cause the script to think that a device may not be affected by a vulnerability, while in reality it is.
-
-\subsection{Sequence number and fragment number}
-
-One of the most blatant issues is that the sequence and fragment number of injected frames was modified by \emph{all} tested network cards when operating in mixed monitor mode.
-This was caused by kernel the function \verb|ieee80211_tx_h_sequence| in the \verb|mac80211| module, meaning only Soft-MAC drivers are affected.
-The problem is that this function overwrites the sequence and fragment number if there is a non-monitor interface associated to the network card, regardless of whether the frame being processed is an injected frame or not.
-Note that this kernel function does not overwrite the sequence number when the network card is in pure monitor mode.
-
-After fixing the above issue, the WN-722N card, which is managed by the \verb|ath9k_htc| driver, still overwrites the sequence number (but not the fragment number) when in mixed monitor mode.
-Moreover, this network card even overwrites the sequence number when operating in pure monitor mode.
-By inspecting the open source firmware code of this card, we identified that the function \verb|ath_tgt_tx_seqno_normal| was overwriting the sequence number (but not the fragment number) of all transmitted frames.
-
-The FragAttack tool bypassed the above issues by patching the TL-WN722N firmware and the Linux kernel to not overwrite non-zero sequence numbers~\cite{vanhoef-usenix2021-fragattacks}.
-In Section~\ref{sec:improvedinjection} we generalize these fixes by extending Radiotap, so user space can inform the kernel whether a new sequence number should be assigned or not.
-%and the firmware of Atheros dongles~\cite{vanhoef-usenix2021-fragattacks} to prevent the sequence and fragment number from being overwritten.
-
-\subsection{Hardware decryption}
-\label{sec:tests:hwcrypto}
-
-When operating in mixed monitor mode,
-the non-monitor interface may enable hardware crypto, meaning frames get decrypted in hardware before they arrive at the driver.
-% received frames may undergo hardware decryption so that the decrypted frames can be passed on to the non-monitor network interface.
-Unfortunately, with the network cards we tested, the virtual monitor frame then no longer has access to the original encrypted frame when using hardware decryption.
-Moreover, hardware encryption may also remove the packet number from the frame header (see Figure~\ref{fig:wififrame}).
-%That is, the monitor interface no longer has access to the original encrypted bytes, and in some cases the hardware may also remove the \red{CCMP header}.
-This is problematic in case access to the packet number (also called nonce or initialization vector) of received encrypted frames is essential.
-For example, the KRACK scripts require access to the packer number to detect nonce reuse and key reinstallations.
-
-One work-around is to disable hardware decryption.
-Unfortunately, the driver for the AWUS036ACM has no parameters to disable hardware crypto, even the latest Linux kernel, which at the time of writing was version 6.0.
-In fact, we found that since kernel 5.8, the ability to disable hardware crypto was also removed for the Intel AC-3160.
-%For instance, the iwlwifi driver removed the ability to disable hardware decryption from kernel \red{X.X} and above~\cite{}, and the \verb|mt76| never had an option to disable hardware decryption.
-Because the AWUS036ACM removes the packet number from the frame header during hardware decryption, and this cannot be disabled by its current driver, this network card cannot be used out-of-the-box with the KRACK test scripts.
-
-In Section~\ref{sec:improvedinjection:linux} we discuss how we added an option the Linux kernel to disable hardware cryptography in all Soft-MAC drivers.
-
-% iwlwifi: It can't be disabled anymore on newer kernels.
-% Discuss the issues that this introduces.
-
-% mt76: has no option to disable hardware decryption.
-
-\subsection{Dropped injected frames}
-
-When using mixed monitor mode, the Linux kernel drops normal data frames that are injected before a client has finished authenticating.
-This is due to a bug in the function \verb|ieee80211_tx_dequeue| in the \verb|mac80211| kernel module, meaning this issue only occurs when using Soft-MAC drivers.
-This behavior is problematic because a user space script expects that injected frames will be transmitted no matter when they are sent.
-
-%\red{---iwlwifi: When using mixed monitor mode, injected frames with a sender address different from the client or AP are not being transmitted \red{properly}.---}
-We also observed that the Intel AC-3160 did not transmit injected frames in mixed monitor mode when the sender address of the injected frame was different from the MAC address of the non-monitor interface.
-Instead, these injected frames got silently discarded.
-%\red{---iwlwifi: injected A-MSDU frames were being malformed before being transmitted. This had to do with padding issues.---}
-We also found that the Intel AC-3160 did not correctly inject A-MSDU frames: sometimes they were transmitted in a malformed manner (with two extra random bytes in the middle) and sometimes injected A-MSDU frames were not transmitted at all.
-
-The Intel AC-3160 and
-RT5572 chipset did not transmit injected frames with the More Fragments~(MF) flag set.
-This could be solved by, after injecting the frame with the MF flag set, immediately injecting a dummy frame \emph{without} the MF flag.
-With the RT5572,
-this dummy frame must also have the same QoS TID as the injected frame,
-but all other fields of the dummy frame do not matter.
-
-\subsection{Unexpected Block Ack procedure}
-
-% - TP-Link: does Block Ack request before first fragmented frame
-% - AWUS036ACM: does Block Ack request right after the first fragmented frame
-% - RT5572: interference from Block Ack. When there were retransmissions of DCHP is suddenly worked once. So it really seems to depend on the timing.
-% - APLCI: does Block Ack and it interfers
-% - Intel AC-3160: also does Block Ack but doesn't interfer with fragmented frames
-% - See the captures in the experiments/ directory in git@github.com:vanhoefm/paper-injection.git
-When injecting fragmented frames in mixed mode after the client is connected with the AP,
-the AWUS036ACM starts a Block Ack procedure after injecting the first fragment. %by transmitting an Add Block Ack action frame.
-This is problematic because any frame transmitted between two fragmented frames may interfere with their reassembly~\cite{vanhoef-usenix2021-fragattacks}.
-Initiating the Add Block Ack procedure also caused the receiver to buffer the second fragment,
-making it appear as if the second fragment never arrived at the receiver.
-The WN-722N card started a Block Ack before the first fragment and did not send the second fragment,
-which FragAttacks avoided by making the driver not advertise the \verb|AMPDU_AGGREGATION| feature.
-Finally, the RT5572 also started a Block Ack procedure, which again interfered with the correct transmission of fragmented frames.
-
-To avoid Block Acks we can disable 802.11n in the non-monitor interface, since Block Acks are part of 802.11n.
-Unfortunately, this work-around cannot always be used, as some experiments require that the non-monitor interface advertises support for 802.11n.
-% This can be fixed by making the driver on the attack device not advertise \verb|AMPDU_AGGREGATION|.
-% We previously did this for the ath9khtc but not other drivers.
-% And it seems the same problem occurs when using the AWUS036ACM.
-% So we should either disable Block Acks completely somehow, likely by disabling 11n, or make changes to the driver (meaning AWUS036ACM would require driver patches which isn't ideal, though it requires patches to disable hardware decryption anyway).
-% Perhaps a second alternative is to patch the kernel using a secondary module.
-For instance, this injection issue was not noticed during the FragAttack research because 802.11n was disabled by default in all tests.
-However, disabling 802.11n means that the aggregation vulnerability was initially not detected in OpenBSD~\cite{vanhoef-usenix2021-fragattacks}, because  OpenBSD only processes aggregated (A-MSDU) frames when the client negotiated to support 802.11n.
-Interesting future work would be to patch the Linux kernel to avoid this issue without having to disable 802.11n.
-
-\section{Improved Wi-Fi Injection}
+\section{SSID Confusion Attacks}
 \label{sec:improvedinjection}
 
-In this section we discuss how we extended the Radiotap standard to gain more control over how injected \wifi{} frames are transmitted.
-We implement our extensions on Linux and discuss how software-defined radio platforms can be used as a more flexible, albeit more costly, alternative to commercial network cards.
-%\red{Finally, we also present a new technique to determine whether a client accepts injected (plaintext) \wifi{} frames during the handshake.}
+\input{table-authmethods}
 
-\subsection{Extending the Radiotap standard}
+\begin{itemize}
+	\item For Enterprise networks, we can make the victim connect to SSID B but the user thinks it is connected to SSID A.
 
-% Frame order, sequence number overwrite
-We cannot just update the Linux kernel to implement the desired frame injection behavior because some programs rely on the current injection behavior.
-For instance, hostap assumes that the Linux kernel overwrites the sequence number of injected frames with a fresh value.
-% when operating in mixed monitor mode, or may want that frames with a different QoS TID can be reordered relative to each other.
-To assure backwards-compatibility, we extend Radiotap with two flags that inform the kernel how to transmit injected frames.
-The first flag, \verb|no-seqnum|, instructs the kernel \emph{not} to overwrite the sequence number. % of the injected frame.
-The second flag, \verb|no-reorder|, instructs the kernel not to reorder the injected frame relative to other injected frames that have this flag set.
-Both new transmission flags have meanwhile been accepted as part of the Radiotap standard.
+	\item Home networks: we can also do the same for WPA3 with the old ``hunting and pecking'' method.
+	
+	% https://www.mathyvanhoef.com/2015/03/codegate-2015-goodcrypto-advanced-wep.html
+	\item Home networks: The SSID confusion attack would also have worked against old WEP networks.
+\end{itemize}
 
-While extending Radiotap, we noticed that Linux also supports a \verb|noack| flag to indicate that injected frames do not have to be acknowledged.
-Surprisingly, this flag was not yet part of the Radiotap standard, and during our work we also standardized this flag so other operating systems can implement support for it as well.
 
-%\red{---For the transmission of broadcast frames through the unicast queue rules? Option to retransmit unicast injected frames? Change connected delay?---}
+\red{What about AP PeerKey?}
 
-\subsection{Linux fixes for \wifi{} injection \& reception}
-\label{sec:improvedinjection:linux}
+For an Enterprise network, a subsequent Fast BSS Transition would also still work, since it is not based on the SSID either.
 
-We implemented the Radiotap extension in the Linux kernel.
-This involved parsing the new Radiotap flags and assuring they are respected when processing an injected frame.
-Among other things, we modified the \verb|ieee80211_tx_h_sequence| function to prevent overwriting the sequence number if the \verb|no-seqnum| flag was set.
-Additionally, we modified \verb|ieee80211_select_queue_80211| to always use the same transmission queue for injected frames that have the \verb|no-reorder| flag set.
-This assures that injected frame with this flag set are not reordered relative to each other.
+With Mesh networks: ``In order to create a secure peering, mesh STAs first authenticate each other and create a mesh PMKSA. This can be done using either SAE or IEEE Std 802.1X. A mesh STA shall support SAE authentication (see 12.4). A mesh STA may support IEEE 802.1X authentication (see 4.10).''
+That is followed by AMPE which does not verify the SSID.
+So the attack is also possible for mesh networks.
 
-We contributed our Radiotap code to the Linux kernel and it has been included in the official kernel.
-In particular, the code to prevent sequence number overwrites is  part of the Linux kernel since version 5.9, and the code to prevent frame reordering is part of the Linux kernel since version 5.11.
+Technically also the TPK handshake for client to client communication.
+But what's the point, no practical impact or realistic threat model?
 
-% ==== Since 5.11 ====
-%
-%2020-12-09	ath9k_htc: adhere to the DONT_REORDER transmit flag	Mathy Vanhoef	1	-1/+6
-%2020-11-06	mac80211: assure that certain drivers adhere to DONT_REORDER flag	Mathy Vanhoef	1	-2/+7
-%2020-11-06	mac80211: don't overwrite QoS TID of injected frames	Mathy Vanhoef	2	-4/+9
-%2020-11-06	mac80211: adhere to Tx control flag that prevents frame reordering	Mathy Vanhoef	1	-2/+5
-%2020-11-06	mac80211: add radiotap flag to assure frames are not reordered	Mathy Vanhoef	3	-0/+8
-%2020-10-30	mac80211: fix regression where EAPOL frames were sent in plaintext	Mathy Vanhoef	1	-3/+4
-%
-% ==== Since 5.9 ====
-%
-%2020-07-31	mac80211: parse radiotap header when selecting Tx queue	Mathy Vanhoef	3	-34/+43
-%2020-07-31	mac80211: remove unused flags argument in transmit functions	Mathy Vanhoef	7	-22/+18
-%2020-07-31	mac80211: use same flag everywhere to avoid sequence number overwrite	Mathy Vanhoef	3	-7/+3
-%2020-07-31	mac80211: do not overwrite the sequence number if requested	Mathy Vanhoef	1	-0/+3
-%2020-07-31	mac80211: add radiotap flag to prevent sequence number overwrite	Mathy Vanhoef	3	-0/+6
-%2020-07-31	mac80211: never drop injected frames even if normally not allowed	Mathy Vanhoef	1	-1/+1
+% https://mrncciew.com/2023/09/25/fils-fast-initial-link-setup/
+FILS Public Key authentication also looks vulnerable.
+Is it realistic that two networks share the same public key?
 
-To overcome the problems related to hardware decryption mentioned in Section~\ref{sec:tests:hwcrypto},
-we added an option to the \verb|mac80211| kernel module to disable hardware cryptography for \emph{all} Soft-MAC drivers.
-When enabled, this forces the driver to disable hardware decryption and encryption, and instead perform these crypto operations in software using the built-in crypto support in \verb|mac80211|.
-%This allowed us to use the AWUS036ACM with the KRACK test scripts.
-As an example, this change allowed us to use the \verb|mt76| network cards, such as the AWUS036ACM, with the KRACK attack scripts.
-
-%Unfortunately, this approach to disable hardware crypto for all Soft-MAC drivers, did not work for the Intel AC-3160. Instead, we reverted the patched that removed the ability to disable hardware crypto for this network card, and made this code compatible with the latest driver and Linux kernel.
-Our global parameter to disable hardware crypto did not work with the \verb|iwlwifi| driver of the Intel AC-3160.
-The problem is that, when disbaling hardware crypto is forced, the \verb|iwlwifi| driver will mistakenly drop non-decrypted frames.
-We solved this issue by porting older code for \verb|iwlwifi| to disable hardware decryption, which was removed in kernel 5.8 onwards, to the latest long-term-support kernel (version 5.15).
-With these changes, network cards using the \verb|iwlwifi| driver can again disable hardware crypto.
-
-%\red{---TODO: firmware: code that we patched in the Atheros devices? It's not specific to Linux though.---}
-
-\subsection{Adding support for openwifi}
-
-\subsubsection{Background}
-
-%Though the COTS (Commercial Off The Shelf) WiFi chip based devices (USB dongle, PCIe card, SBC -- Single Board Computer) is easy to get, using it for the security test (injection) could have some difficulties in the cases: the hardware going off the market; the chip/firmware/driver getting updated and bringing changed or unexpected behaviour; reverse engineering the black-box/close-source implementations.
-Another disadvantage of commercial off-the-shelf \wifi{} dongles, besides being closed-source, is that after some years specific models may no longer be available on the market.
-Additionally, new hardware versions of a \wifi{} dongle may contain a radio chip of a different vendor, meaning its frame injection and transmission behavior may suddenly change.
-Overall, relying on off-the-shelf dongles can be troublesome in practice.
-
-%- Introduce openwifi: softmac. Supported platforms. Supported Wi-Fi version/features? Support bands: 2.4 and/or 5 GHz?
-%Maybe mention openwifi purposely does as little as possible, which is ideal for us, since frames are unlikely to be modified.
-A better solution is using open source \wifi{} implementations that run on Software Defined Radios (SDRs), such as openwifi~\cite{jiao2020openwifi}.
-Openwifi offers a physical and low MAC layer implementation of \wifi{} on FPGA and provides an open-source Soft-MAC driver for Linux.
-From the perspective of a user, it provides an ordinary \wifi{} network interface, with the advantage that its full implementation is open-source.
-This means openwifi gives complete control over the transmission behavior of injected frames, while at the same time being compatible with user space \wifi{} scripts and tools.
-
-%is a open source WiFi chip design that can run on many kinds of SDR (Software Defined Radio) FPGA boards (Analgo Devices AD9361 RF front-end and Xilinx Zynq/Zynqmp FPGA based. See the hardware list on github). It adopts the typical softmac Linux Wifi architecture, and behaves just like many other softmac COTS WiFi cards.
-% Openwifi supports: 802.11a/g/n; 20MHz; A-MPDU; 70MHz~6GHz (not only 2.4/5GHz); etc. 802.11ax is under development. 
-
-Openwifi runs on the ARM processor of the Xilinx Zynq SoC, and the low-layer \wifi{} functionality, such as sending acknowledgements and (re)transmitting frames, is implemented in Verilog and runs on the FPGA that is part of the same SoC.
-The latest version of openwifi is based on the Analog Devices Linux distribution called ADI-Linux~\cite{adi-linux}, since it provides the most reliable support for the AD9361 RF fort-end.
-Openwifi uses version 2019\_R1 of ADI-Linux, and this distribution is in turn based on Linaro 14.04, which is a variant of Ubuntu that uses Linux kernel 4.14.0.
-
-%The openwifi Linux driver is lightweight and has least operation/change for the frame coming across. Very precise hardware/FPGA behaviours control is supported, such as the re-transmission, sending ACK, expecting ACK, etc.
-
-\subsubsection{Incorporating our Radiotap extensions}
-
-To reuse (most of) our existing Linux kernel patches that implement the previously-discussed Radiotap extensions, we first upgraded openwifi to run on a newer ADI-LINUX release, namely version 2021\_R1.
-%Due to the old distribution/kernel version lacking maintenance, lots of Linux libraries/packages version/dependency issues (mainly the python virtual environment) are encountered while trying to run the KRACK and FragAttacks scripts on openwifi.
-Doing so also makes it easier to run and test the latest \wifi{} security tools such as KRACK and FragAttacks.
-This new release of ADI-Linux is based on Raspberry Pi OS 11.2, which in turn is based on Debian 11.2, and uses Linux kernel 5.10.0.
-As a result, the new \verb|no-seqnum| Radiotap flag (recall Section~\ref{sec:improvedinjection:linux}) is supported by default.
-The patches to support the \verb|no-reorder| flag had to be included manually since they are not yet part of Linux 5.10.
-During the upgrade to 2021\_R1, the openwifi driver had to be adapted for some kernel API changes. %(struct timeval, do\_gettimeofday(), dma\_request\_slave\_channel() related).
-The openwifi device tree was also updated according to the new Analog Devices ARM peripheral address space allocation.
-Finally, the Verilog FPGA code also had to be adapted to be compatible with the new Xilinx Vivado 2021.1 toolsuite.
-All these changes have been contributed to the public openwifi project.
-%\footnote{We will make all these changes publicly available and contribute our patches to the openwifi project.}
-%Due to the Xilinx FPGA tool chain upgrading from Vivado 2018.3 to 2021.1 (required by Analog Devices), the FPGA code is also adapted.
-
-Thanks to this upgrade of openwifi to a new Linux distribution, we can now directly run our injection tests and \wifi{} tools on it.
-For instance, the KRACK and FragAttacks scripts run out-of-the-box on the upgraded openwifi release, and we could reliably test commodity \wifi{} devices such as the iPhone~13, Dell XPS15 2016, and AR93XX PCIe card.
-We validated that these scripts correctly injected frames towards these devices in line with our expectations.
-
-%After upgrading, the environment/dependencies required by KRACK and FragAttacks scripts has been setup successfully.
-% Te scripts run smoothly on openwifi board with other COTS (iPhone13, Dell XPS15 2016, AR93XX PCIe card) and openwifi devices.
-% Besides, many new kernel features and lots of well maintained up-to-date Linux libraries/packages are available for further exploration.
-
-% Beyond the above standard/normal operation that is similar as COTS WiFi chips, openwifi also offers so called side channel for low level information extracting from FPGA to driver.
-% For example, normally the A-MPDU operation is done by Low MAC and PHY layer in the chip, at driver level it is only shown as normal MPDUs (de-aggregated A-MPDU) according to the layered philosophy.
-% The related control info (PHY header, A-MPDU delimiter/EOF, etc.) is not cared/available.
-% Via the side channel, extracting the original A-MPDU frames becomes possible.
-% Currently the side channel already support extracting: CSI, frequency offset, equalizer constellation, timestamp, real-time RF/Low-MAC states and IQ samples.
-
-% \subsection{Plaintext during handshake}
-
-% Mention the vulnerability and it's variants (plaintext, fragment, broadcast fragment, cloacked A-MSDU).
-
-% Explain how we can test it without having to run a packet capture on the device under test.
-
-% \red{---Reference evaluation section or discuss results here?---}
-
+\red{
+%Same password for SSID-WPA2 and different SSID-WPA3?
+%Assuming password cannot be brute-forced, has the benefit that WPA3 provides forward secrecy.
+%But then we can't change the SSID because the client will realize that the security configuration has changed...
+What about two SSID with different requirements like Management Frame Protection?
+We cite several sources where enabling MFP or similar would cause issues, so one network is basic, and the other has all the extensions.}
 
 \section{Evaluation}
 \label{sec:evaluation}
 
-In this section, we evaluate the impact of our injection fixes.
-We do this by testing for vulnerabilities, where our injection fixes enable us to more reliably discover vulnerable devices.
-
-\subsection{Tested vulnerabilities}
-
-We evaluate our injection improvements by testing whether devices are (still) affected by (variants of) the FragAttacks vulnerabilities~\cite{vanhoef-usenix2021-fragattacks}.
-In our tests we focus on attacks where our injection fixes make detection of a vulnerable device more reliable.
-In particular, we focus on two vulnerabilities:
+Example attack scenarios Enterprise:
 \begin{itemize}
-	% %\red{---We test broadcast frame injection with the ``no ack'' bit set. Essential to use mixed monitor mode to they are sent when the tested client is awake---}
-	\item Transmission of broadcast frames: we perform tests where broadcast frames are sent to the device under test.
-	Since broadcast frames are not automatically retransmitted, it is essential that the frame is injected when the client is awake.
-	This can be done by using mixed monitor mode such that the Linux kernel will only transmit injected frames once the client is awake (recall Section~\ref{sec:problems:sleep}).
-	%TODO: This should already have been possible with FragAttacks. So we can't claim we improve upon FragAttacks, though mixed monitor mode was not explained in the paper either.
-
-	\item Transmission of frames during the handshake: we perform tests where plaintext frames are sent during the handshake.
-	Since handshake messages are typically sent using a different QoS TID priority, it is essential that the injected frame is not reordered relative to the handshake messages, which our injection patches will guarantee.
-	% Otherwise the injected frame is not guaranteed to be sent before the handshake completes.
+	\item Eduroam and local \wifi{} network that use the same authentication.
+	Scrape eduroam and look if the radius server is also used in other configuration guides.
+	\item Telenet Wi-Free and KU Leuven university login.
+	Home users can now intercept traffic!
 \end{itemize}
-% - \red{---Use the ACK flag to assure reliability when injecting DHCPs, while at the same time disabling it when sending our broadcast attack frames. This also prevents retransmission of frame with spoofed MAC address, useful in multi-channel MitM?---}
-% - \red{---The FragAttack follow-up paper has a list of which devices were vulnerable to the before attack. Maybe we can pretend that the broadcast test somehow also is relevant?---}
-%
-%
-%
-Since our first test case is aimed towards clients that may enter sleep mode, we focus our tests on smartphones.
-Concretely, we tested the Huawei Y6 prime, Nexus 5X, Samsung i9305, iPhone XR, iPad Pro 2, OnePlus 6 A6000, and Pixel 4 XL.
 
-We also tested our patches to disable hardware encryption for all Soft-MAC drivers by running the KRACK script.
-We used the AWUS036ACM to run the KRACK script against our phones.
+We can test these attacks at multiple devices as well.
 
-%We first tested \red{our devices} for the KRACK attack variants.
-%In our tests we used a \red{mt67} dongle with our \verb|mac80211| kernel patches that enable us to disable hardware decryption for all Soft-MAC drivers.
+Based on scraping of the tools, we found 6 vulnerable organizations:
+eduroam.technion.ac.il
+nac.temple.edu
+radius.kuleuven.be
+radius.vse.cz
+radius.york.ac.uk
+val.ul.ie
 
-\subsection{Vulnerability test results}
+\red{---TODO: Also check for public key reuse?---}
 
-We discovered three new vulnerable devices that accept (fragmented) plaintext data frame before the client has authenticated:
-%TODO: This overview is from the FragAttack follow-up paper that we started to write
-\begin{description}
-	% (Chinese manufacturer but might contain a Qualcomm chip)
+Example attack scenarios WPA3.
+Note that an attack only makes sense if the adversary does not know the password, otherwise they can just put up a rogue AP:
+\begin{itemize}
+	\item 
+\end{itemize}
 
-    \item[OnePlus 6]
-    %\paragraph{OnePlus 6}
-	This device accepts and processes plaintext broadcast data frames while it is still authenticating,
-	which is a new variant of the implementation-specific FragAttack vulnerabilities.
-	Note that to correctly inject broadcast \wifi{} frames we set the \verb|no-ack| flag in the Radiotap, instructing the sender not to wait for an acknowledgment (and thereby not retransmitting the frame).
-	We reported this vulnerability to the vendor and it was assigned \mbox{CVE-2021-36196}.
+Impact of SSID confusion:
+\begin{itemize}
+	\item CloudFlare's 1.1.1.1: can be abused to disable a victim's VPN.
+\end{itemize}
 
-%	This device accepts a plaintext broadcast frame \red{during the handshake}.
-%	Note that it does not accept plaintext unicast or fragmented frames \red{during the handshake}.
-%	\red{Should request a new implementation-specific CVE for this.}
-%	Recall we disabled ACKs to inject this.
+\section{\red{Public \wifi{} Networks}}
 
-    \item[Pixel 4 XL and OnePlus 6]
-	%\paragraph{Pixel 4 XL and OnePlus 6}
-	Both devices accept plaintext unicast \wifi{} data frames while it is still
-	authenticating to a network, i.e., during the \mbox{4-way} handshake.
-	We reported both vulnerabilities to the vendors, and the vulnerability in the OnePlus 6 was assigned the identifier CVE-2021-36197.
-
-	%\red{---Background: in the original paper we inject EAPOL/A-MSDU frames during the handshake, and \emph{broadcast fragments} (we now inject unicast normal frames). So we are more general.---}
-
-	%\paragraph{Huawei Y6 Prime}
-	\item[Huawei Y6 Prime]
-	This device accepts plaintext unicast and broadcast frames both during and after this handshake.
-	As a result, this vulnerability is trivial to exploit.
-
-\end{description}
-
-\noindent
-Finally, only the Samsung i9305 was vulnerable to KRACK.
-Since this is an old phone that has not received updates after the disclosure of this attack, this is an expected result, and it confirms that our patches to disable hardware decryption are working properly.
-% We did confirm that our script was operating properly against an old (unpatched) Samsung i9305: the script correctly determine that it was vulnerable to all variants \red{supported by the testing script}.
+\begin{itemize}
+	\item TELENET Wi-Free
+	\item citiwifi in Luxembourg and \verb|luxfuturelab.lu|
+\end{itemize}
 
 \section{Related Work}
 \label{sec:relatedwork}
 
-Bellardo et al.\ modified an iPAQ H3600 containing a Dlink DWL-650 card to be able to inject control frames~\cite{bellardo2003802}.
-Others created an open firmware version for Broadcom network cards, giving researchers a high level of control over transmitted frames~\cite{gringoliopenfwwf2010}.
-To enable monitor mode and frame injection on Android, researchers modified the closed-source firmware of Broadcom chips~\cite{nexmon:project}.
-
-In another work, the \verb|ath9k_htc| driver and firmware was modified to prevent modification to forwarded frames~\cite{vanhoef2014advanced}.
-The same driver has also been modified to acknowledge a range of MAC addresses in order to launch denial-of-service attacks~\cite{vanhoef-sp2020-dragonblood}.
-Users also modified drivers to more easily inject frames in the 5~GHz band~\cite{linux-ath-user-regd}.
-
-There have been various open implementations of the 802.11 standard on top of software-defined radio platforms.
-One of the first is an implementation of 802.11b by BBN technologies using GNU Radio~\cite{dobbins2011software,cgran-archive2013}.
-This was extended by the Signal Processing Across Networks (SPAN) lab to improve reliability~\cite{span-802.11b,dobbins2011software}.
-In 2010, researchers from Forschungszentrum Telekommunikation Wien (FTW) created an implementation of 802.11p using GNU Radio and a USRP2~\cite{fuxjager2010ieee}.
-Bloessl et al.\ implemented 802.11p in GNU Radio in2013~\cite{bloessl2013towards}.
-% Xianjun: feel free to modify the next few line(s)
-Finally, Jiao et al.\ created an open implementation of 802.11 on an System-on-Chip~\cite{jiao2020openwifi}, and Nuand created an open implementation of 802.11 that can run on the FPGA of a software defined radio~\cite{Nuand}.
-These projects are mainly for study and experimentation of the 802.11 communication protocols and are rarely used in the context of testing \wifi{} implementations by injecting unexpected or malformed frames.
+Related work!
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-When performing \wifi{} experiments, it is \emph{essential} to use an additional, independent, \wifi{} dongle to monitor whether frames are transmitted correctly and as expected.
-%Such a dongle is neeeded to guarantee that injected frames are properly transmitted, as demonstrated by our experiments.
-We also encourage vendors to open-source the firmware of network cards, as this would give researchers more control over the network card in experiments.
+Need to authenticate the SSID!
 
-We created a script to test the correctness of \wifi{} frame injection which is available online~\cite{repository}.
-Our frame injection improvements are now part the Radiotap standard, we implemented them on Linux, and our patches are now part of the Linux kernel since version 5.11.
-Our changes provide support for a selection of commercial \wifi{} dongles as well as software defined radio platforms, such as openwifi.
-By having greater control over how and when frames are injected, we were able to more reliably test wireless cards for vulnerabilities, leading to the discovery of three vulnerable devices.
-
-%We evaluated the correctness of \wifi{} frame injection on Linux and discovered several situations in which frames are improperly transmitted or where we observed behavior that negatively affects frame delivery.
-%These \red{flaws} can cause user space \wifi{} program that utilize monitor interfaces to misbehave.
-%For instance, we showed that it can cause \wifi{} security tools to incorrectly determine whether a device under test is affected by a vulnerability or not.
-
-
-%\red{All our changes are publicly available.}
-
-\vspace{-0.05cm}
+%\vspace{-0.05cm}
 \begin{acks}
 This research is partially funded by the Research Fund KU Leuven, and by the Flemish Research Programme Cybersecurity.
 \end{acks}
 
-\vspace{-0.05cm}
+%\vspace{-0.05cm}
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 

@@ -1,0 +1,18 @@
+\begin{table}
+	\caption{Overview of authentication methods and whether they are vulnerable to SSID confusion attacks.}
+	\begin{tabular}{lll}
+	\toprule
+	Network & Protocol & Affected \\
+	\midrule
+	Home & WEP & Yes \\
+		& WPA1/2 & No \\
+		%TODO: Both of these are also used for Mesh networks. So this is a bad grouping... Maybe first list SAE/802.1X and then mention the type of networks they are used in? Or not mention the type at all?
+		& \red{WPA3 SAE-loop} & Yes \\
+		& \red{WPA3 SAE-const} & No \\
+	Enterprise & Any & Yes \\
+	Mesh & AMPE & Yes \\
+	Other & FILS & Yes \\
+		& FT & Yes \\
+	\bottomrule
+	\end{tabular}
+\end{table}
