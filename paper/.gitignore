@@ -22,7 +22,7 @@
 *.out
 *.synctex.gz
 *.ent
-paper-injection.pdf
+ssid-confusion.pdf
 *.bcf
 *.run.xml
 comment.cut
