@@ -110,7 +110,14 @@ Hello world!
 
 To summarize, our contributions are:
 \begin{itemize}
-    \item 
+    \item We systematically inspect all \wifi{} authentication methods and whether they authenticate the SSID (Section~X).
+
+    \item We propose and evaluate our SSID confusion attack against home and Enterprise \wifi{} networks.
+    % First constant presence, second where attacker is only present on other channel during connection => the SSID in the beacon is **NOT** checked anymore once connected!!!
+
+	\item We study possible practical impacts of our SSID confusion attack (Section~X).
+	
+	\item We propose (backwards-compatible) defenses (Section~Y).
 \end{itemize}
 Finally, we give an overview of related work in Section~\ref{sec:relatedwork}, and we conclude in Section~\ref{sec:conclusion}.
 
@@ -185,6 +192,37 @@ Is it realistic that two networks share the same public key?
 What about two SSID with different requirements like Management Frame Protection?
 We cite several sources where enabling MFP or similar would cause issues, so one network is basic, and the other has all the extensions.}
 
+\subsection{Channel Validation}
+
+\red{---TODO: What about performing the attack when channel validation is enabled? Probably just do a wormhole attack or be out of range of the original AP.---}
+
+\section{Checking SSID in Beacon}
+
+\subsection{Beacon Protection}
+
+Once a client has connected, does it check the SSID in the received beacons?
+If not, the attacker only needs to be present while connecting, and can then move the client back to the original channel.
+
+\red{---Can we still perform the attack when beacon protection is being used?---}
+Doesn't look like it on Linux, see mac80211/mlme.c.
+Normally a reference beacon should be saved, which is then checked once connected.
+This is currently not done by Linux.
+
+\subsection{Evaluation}
+
+We make a test tool again? So no full attack, but check all the preconditions.
+
+\red{---Test 1: configure using ``weak'' SSID. But manually change SSID to ``strong'' one in beacon, probe response, and association response. That simulates an attack. Does the client connect?---}
+
+\red{---Test 2: change the SSID in the beacon only after connecting. Both with and without beacon protection.---}
+
+Our tool supports all major authentication methods: WEP, WPA2/3, WPA3 with SAE-Loop and SAE-Constant, PEAP, TTLS, EAP-PWD, and so on.
+Additionally, test can be performed while the network is using \red{MFP} or \red{beacon protection}.
+
+\subsection{Properly-Implemented Beacon Protection}
+
+\red{Demonstrate that the attack is prevented in all cases when the AP and client use beacon protection, with reference beacon comparison, and optionally with SSID checking in received beacons.}
+
 \section{Evaluation}
 \label{sec:evaluation}
 
@@ -224,6 +262,23 @@ Impact of SSID confusion:
 \begin{itemize}
 	\item TELENET Wi-Free
 	\item citiwifi in Luxembourg and \verb|luxfuturelab.lu|
+\end{itemize}
+
+\section{Defenses}
+
+Backwards-compatible:
+\begin{itemize}
+	\item \textbf{\red{Properly implement beacon protection with reference beacon verification or comparison! Make it required on the client!}}
+	\item Use a different RADIUS server for each network.
+	\item Use a different inner/outer identity for each network?
+	Depends on whether the RADIUS server knows the network the request came from.
+	\item Modify the client OS to include a flag whether the authenticity of the SSID is currently verified.
+	Alternatively, instead of giving access to the SSID, the OS could make available the CommonName used in enterprise networks.
+\end{itemize}
+
+Protocol changes:
+\begin{itemize}
+	\item The 4-way handshake itself could (again) include the SSID.
 \end{itemize}
 
 \section{Related Work}
