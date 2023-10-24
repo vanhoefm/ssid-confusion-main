@@ -171,6 +171,12 @@ Especially 6~GHz requires more advanced security I think?
 
 CloudFlare's 1.1.1.1: can be abused to disable a victim's VPN.
 
+\subsection{Different SSID per Frequency Band}
+
+2.4 vs 5 GHz network, different management frame protection options.
+
+2.4 AP may be older and vulnerable to KRACK/FragAttacks.
+
 \section{The SSID Confusion Attack}
 \label{sec:attack}
 
@@ -186,6 +192,10 @@ In this section, we introduce our SSID confusion attack, which was assigned \red
 % https://www.mathyvanhoef.com/2015/03/codegate-2015-goodcrypto-advanced-wep.html
 The old WEP protocol is also vulnerable, \red{which is still used by 1\% of all \wifi{} networks}.
 
+\subsubsection{WPA1/2}
+
+\subsubsection{WPA3}
+
 \subsection{Enterprise Networks} % Enterprise networks 802.1X
 
 For an Enterprise network, a subsequent Fast BSS Transition would also still work, since it is not based on the SSID either.
@@ -197,6 +207,12 @@ That is followed by AMPE which does not verify the SSID.
 So the attack is also possible for mesh networks.
 
 \subsection{Other}
+
+\subsubsection{Fast BSS Transition}
+
+\subsubsection{FILS (Public Key)}
+
+\subsubsection{Other}
 
 \red{What about AP PeerKey?}
 
@@ -215,7 +231,7 @@ Is it realistic that two networks share the same public key?
 %TODO: We won't actually request this CVE...
 \red{This vulnerability in} \verb|wpa_supplicant| \red{was assigned CVE-2023-XXXXXXX}.
 
-\subsection{\red{Quick-attack}}
+\subsection{Connection-Only Attack}
 
 Once a client has connected, does it check the SSID in the received beacons?
 If not, the attacker only needs to be present while connecting, and can then move the client back to the original channel.
@@ -232,6 +248,8 @@ Our tool supports all major authentication methods: WEP, WPA2/3, WPA3 with SAE-L
 Additionally, test can be performed while the network is using \red{MFP} or \red{beacon protection}.
 
 \subsection{Enterprise Evaluation}
+
+\red{Telenet plaintext behavior, reply time}
 
 Example attack scenarios Enterprise:
 \begin{itemize}
@@ -273,8 +291,13 @@ Public \wifi{} Networks:
 
 \subsection{Beacon Protection}
 
+\subsubsection{Experiments}
+
 \red{---Can we still perform the attack when beacon protection is being used?---}
-Doesn't look like it on Linux, see mac80211/mlme.c.
+%Doesn't look like it on Linux, see mac80211/mlme.c.
+
+\subsubsection{Verification of pre-auth beacon}
+
 Normally a reference beacon should be saved, which is then checked once connected.
 This is currently not done by Linux.
 
@@ -288,6 +311,7 @@ But enabling beacon protection AND advertising the SSID will prevent the attack,
 Backwards-compatible:
 \begin{itemize}
 	\item Use a different RADIUS server for each network.
+	For home networks, use a different password for each different SSID.
 	%\item Use a different inner/outer identity for each network? Depends on whether the RADIUS server knows the network the request came from.
 	\item Modify the client OS to include a flag whether the authenticity of the SSID is currently verified.
 	Alternatively, instead of giving access to the SSID, the OS could make available the CommonName used in enterprise networks.
