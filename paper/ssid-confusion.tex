@@ -1,19 +1,18 @@
-% Elements that got dropped:
-% - Table with the properties of the network cards that we tested
-% - Document in the experimental setup how we injected frames with source address equal to a the monitor interface and one not equal to the monitor interface.
+% short papers with a length of up to 6 pages (including bibliography and appendices)
 %TODO: Include the anonymous tag
 \documentclass[sigconf,review]{acmart}
 %\settopmatter{printfolios=true}
 \usepackage[inline]{enumitem}
 \usepackage{xcolor}
 
-\copyrightyear{2023}
-\acmYear{2023}
-\setcopyright{acmlicensed}\acmConference[WiSec '23]{Proceedings of the 16th ACM Conference on Security and Privacy in Wireless and Mobile Networks}{May 29-June 1, 2023}{Guildford, United Kingdom}
-\acmBooktitle{Proceedings of the 16th ACM Conference on Security and Privacy in Wireless and Mobile Networks (WiSec '23), May 29-June 1, 2023, Guildford, United Kingdom}
+\copyrightyear{2024}
+\acmYear{2024}
+\setcopyright{acmlicensed}
+\acmConference[WiSec '24]{Proceedings of the 17th ACM Conference on Security and Privacy in Wireless and Mobile Networks}{May 27-30, 2023}{Seoul, South Korea}
+\acmBooktitle{Proceedings of the 17th ACM Conference on Security and Privacy in Wireless and Mobile Networks (WiSec '24), May 27-30, 2023, Seoul, South Korea}
 \acmPrice{15.00}
-\acmDOI{10.1145/3558482.3581779}
-\acmISBN{978-1-4503-9859-6/23/05}
+%\acmDOI{10.1145/3558482.3581779}
+%\acmISBN{978-1-4503-9859-6/23/05}
 
 % Improved URL splitting over multiple lines:
 \def\UrlBigBreaks{\do\/\do-\do:}
@@ -21,16 +20,18 @@
 % ======== TikZ =========
 
 \usepackage{tikz}
-\usetikzlibrary{intersections}
-\usetikzlibrary{arrows}
+\usetikzlibrary{intersections,fit}
+\usetikzlibrary{arrows,arrows.meta}
 \usetikzlibrary[patterns]
 \usetikzlibrary{calc,positioning,shapes,decorations.pathreplacing}
 % By default large arrow heads, and nodes next to each other
 \tikzset{>=angle 90, node distance=-\pgflinewidth}
+\newcommand{\circlenum}[1]{\textcircled{\raisebox{-0.90pt}{#1}}}
 
 % ======== Utility commands =========
 
 \newcommand{\wifi}{\mbox{Wi-Fi}}
+\newcommand{\fourway}{\mbox{4-way}}
 \DeclareRobustCommand{\red}[1]{\textcolor{red}{#1}}
 %\newcommand{\red}[1]{#1}
 
@@ -99,15 +100,37 @@
 % \received[accepted]{5 June 2009}
 
 \begin{abstract}
-Write an abstract here.
+When connecting to a protected \wifi{} networks, the client and network mutually authenticate each other, and subsequently protect all transmitted data frames.
+Once connected, the user can see which network they are connected to, and make security decisions based on this.
+However, in this paper we demonstrate that a client can be tricked into connecting to a different (protected) \wifi{} network than the one it intended to connect to.
+The root cause is a design flaw in the IEEE 802.11 standard: the network name (SSID) is not always authenticated.
+We demonstrate the practical impact of this attack, find that all devices are vulnerable to the attack, and propose backwards-compatible defenses as well as updates to the standard.
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
 
+When connecting to a protected \wifi{} network, all transmitted data will be encrypted and authenticated.
+One would also reasonably expect that the name of the \wifi{} network as shown by the client, called the Service Set Identifier~(SSID), it also trustworthy.
+In other words, if a client believes (and shows to the user) that it is connected to the protected \wifi{} network \verb|university|, \red{then one would expect that an adversary cannot trick the client into showing a different SSID}.
+
+We first highlight that significant trust is (indirectly) placed on the SSID that a client thinks it is connected to.
+One example is that many VPNs, such as Clouldflare's WARP VPN, hide.me, and Windscribe, can automatically disable the VPN with connected to a trusted \wifi{} network.
+These apps recognize the \wifi{} network based on its SSID.
+
+Our SSID confusion attack can trick a vulnerable client into connecting to, and mutually authenticating with, a different network than it thinks it is connecting to.
+The root cause is that, although credentials are mutually authenticated when connecting to a protected \wifi{} network, the name of the network is \emph{not} authenticated.
+Only when using home networks with WPA1/2 or version~2 of WPA3 is the \red{SSID} indirectly authenticated.
+
 We can make the victim connect to SSID B but the user thinks it is connected to SSID A.
 This works against Enterprise networks that use the same radius server and against home WEP and \red{WPA3 version 1} networks that use the same password.
+
+Several backwards-compatible defenses exist to prevent the attack.
+First, beacon protection can be enabled, and the client must then capture a beacon before completing \red{the handshake} and verify the authenticity of \red{this reference beacon}.
+Because the beacon contains the SSID of the network, authenticating the beacon means that the SSID is now also authenticated.
+Another defense for home networks is to use a unique password for every SSID, and for enterprise networks one defense is to use a different \red{CommonName} for the RADIUS server for each SSID.
+Ideally, the IEEE 802.11 standard that underpins \wifi{} is also updated to always authenticated the SSID in the \fourway{} handshake, which would assure that the SSID is always authenticated.
 
 To summarize, our contributions are:
 \begin{itemize}
@@ -156,14 +179,15 @@ In infrastructure networks, there is a single central Access Point~(AP), and all
 
 \subsection{Authentication Method Reuse}
 
-\red{
-	%Same password for SSID-WPA2 and different SSID-WPA3?
-	%Assuming password cannot be brute-forced, has the benefit that WPA3 provides forward secrecy.
-	%But then we can't change the SSID because the client will realize that the security configuration has changed...
-	What about two SSID with different requirements like Management Frame Protection?
-	We cite several sources where enabling MFP or similar would cause issues, so one network is basic, and the other has all the extensions.}
-Can be different SSIDs for 2.4, 5, and 6~GHz.
-Especially 6~GHz requires more advanced security I think?
+In practice, it can often occur that a client can use the same authentication methods, and corresponding credentials, to connect to different \red{SSIDs}.
+A common example is when different SSIDs are advertised for each frequency band, e.g., there might be two networks called \verb|eduroam| and \verb|eduroam-2.4| for the 5 and 2.4~GHz band, respectively.
+This is sometimes done because certain clients do not automatically use the \red{typically faster} 5 GHz band, and with this naming, by default devices will use the 5~GHz band, unless the client explicitly connects to the 2.4~GHz SSID.
+% We cite several sources where enabling MFP or similar would cause issues, so one network is basic, and the other has all the extensions.
+Additionally, networks in \red{newer} frequency bands typically support more features, including security features such as Management Frame Protection~\cite{schepers2021let}, and are therefore on average more secure than the 2.4~GHz SSID.
+%TODO: Other security features?
+%TODO: What about 6 GHz?
+
+Another use-case is where a university employee can use the same credentials \red{and RADIUS configuration} to connect to both their own university network and the eduroam networks.
 
 \red{---The 2.4 variant can be broadcasted by older APs that are more likely to be vulnerable to attacks, such as KRACK or FragAttacks. Can't leak the key but still leak/inject traffic sort of similar to Enterprise attack.---}
 
@@ -180,9 +204,15 @@ CloudFlare's 1.1.1.1: can be abused to disable a victim's VPN.
 \section{The SSID Confusion Attack}
 \label{sec:attack}
 
-In this section, we introduce our SSID confusion attack, which was assigned \red{CVE-2023-XXXXXXX}.
+In this section, we introduce our SSID confusion attack, which was assigned \red{CVE-2023-XXXXXXX}, and systematically analyze which authentication methods are vulnerable.
 
 \subsection{Attack Details}
+
+\input{fig-ssid-confusion}
+
+\red{---TODO: Diagram: Advertise different SSID on another channel, forward frames to the real AP, handshake succeeds.---}
+
+\red{Can make it connect to an SSID it has not ever connected to before.}
 
 \input{table-authmethods}
 

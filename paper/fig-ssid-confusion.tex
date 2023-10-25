@@ -1,0 +1,103 @@
+% !TeX spellcheck = en_US
+\tikzset{cross/.style={cross out, draw=black,ultra thick, minimum size=15, inner sep=0pt, outer sep=0pt}, cross/.default={1pt}}
+
+\begin{figure}[t]
+	\centering
+	\begin{tikzpicture}
+	
+	% Definitions.
+	\tikzstyle{every node}=[
+		%font=\small,
+		inner sep=3pt,
+		%text height=1ex,
+		%text depth=.25ex,
+		%minimum height=0.40cm
+	]
+	\def\myarrow{Straight Barb[width=6.4pt,length=3.2pt]};
+	\def\StageDepth{0.40cm};
+	\def\StagePadding{0.20cm};
+	\def\BubbleShiftX{0.10cm};
+	\def\BubbleShiftY{0.10cm};
+	
+	% ---------- Header and Vertical Lines ---------
+	
+	\node[fill=green!15, draw] (client) {Client};
+	\node[fill=red!15, draw,right=0.10cm of client.east] (attacker) {Attacker};
+	\node[fill=green!15, draw,right=5.50cm of client.west] (ap) {AP (Vulnerable)};
+	
+	\def\TimelineShift{0.1cm}
+	\coordinate (clientTop) at ([xshift=\TimelineShift]client.south west);
+	\coordinate (attackerTop) at ([xshift=\TimelineShift]attacker.south west);
+	\coordinate (apTop) at ([xshift=-\TimelineShift]ap.south east);
+	
+	\def\TimelineSize{5.30cm}
+	\draw[-] (clientTop) -- ([yshift=-\TimelineSize]clientTop);
+	\draw[-] (attackerTop) -- ([yshift=-\TimelineSize]attackerTop);
+	\draw[-] (apTop) -- ([yshift=-\TimelineSize]apTop);
+	
+	% ------------ Location of Messages -----------
+	
+	\def\LineOffset{0.70cm}
+	\def\LineOffsetContextLines{0.10cm}
+	\def\LineMessageOffset{-0.10cm}
+	\coordinate (line1) at ([yshift={-\LineOffset+\LineOffsetContextLines}]clientTop);
+	\coordinate (line2) at ([yshift={-\LineOffset-\LineOffsetContextLines}]line1);
+	\coordinate (line3) at ([yshift={-\LineOffset}]line2);
+	\coordinate (line4) at ([yshift={-\LineOffset}]line3);
+	\coordinate (line5) at ([yshift={-\LineOffset}]line4);
+	\coordinate (line6) at ([yshift={-\LineOffset}]line5);
+	\coordinate (line7) at ([yshift={-\LineOffset-2*\LineOffsetContextLines}]line6);
+	
+	% ================== STAGE 1 ==================
+	
+	% Connection.
+	\draw[{\myarrow}-{\myarrow}, dashed] (line1) -- node[fill=white,draw=white,inner sep=1pt] {\emph{Connection}} (apTop |- line1);
+	
+	% Request.
+	\draw[-{\myarrow}] (clientTop |- line2) -- node[above,yshift=\LineMessageOffset] {Request} (apTop |- line2);
+	
+	% Brackets for Stage.
+	\draw[densely dashed, color=gray, rounded corners=0.1cm]
+	([yshift=\StagePadding]line1 -| apTop) --
+	([yshift=\StagePadding,xshift=\StageDepth]line1 -| apTop) -- 
+	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {St.~\circlenum{1}}
+	([yshift=-\StagePadding,xshift=\StageDepth]line2 -| apTop) --
+	([yshift=-\StagePadding]line2 -| apTop);
+	
+	% ================== STAGE 2 ==================
+	
+	% Re-Connection.
+	\draw[{\myarrow}-{\myarrow}, dashed] (attackerTop |- line4) -- node[fill=white,draw=white,inner sep=1pt] {\emph{Connect with the AP}} (apTop |- line4);
+	
+	% Bubbles.
+	\node[anchor=west,rounded corners=3pt,fill=white,draw] (line3node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]attackerTop |- line3) {Spoof Client MAC Address};
+	\node[anchor=east,rounded corners=3pt,fill=white,draw] (line5node) at ([xshift=\BubbleShiftX,yshift=\BubbleShiftY]apTop |- line5) {Generate New Key};
+	
+	% Brackets for Stage.
+	\draw[densely dashed, color=gray, rounded corners=0.1cm]
+	([yshift=\StagePadding]line3 -| apTop) --
+	([yshift=\StagePadding,xshift=\StageDepth]line3 -| apTop) -- 
+	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{2}}
+	([yshift=-\StagePadding,xshift=\StageDepth]line5 -| apTop) --
+	([yshift=-\StagePadding]line5 -| apTop);
+	
+	% ================== STAGE 3 ==================
+
+	% Response.
+	\draw[-{\myarrow}] (apTop |- line7) -- node[above,yshift=\LineMessageOffset] {Response} (attackerTop |- line7);
+	
+	% Bubbles.
+	\node[anchor=east,rounded corners=3pt,fill=white,draw] (line6node) at ([xshift=\BubbleShiftX,yshift=-\BubbleShiftY]apTop |- line6) {Encrypt Response with New Key};
+	
+	% Brackets for Stage.
+	\draw[densely dashed, color=gray, rounded corners=0.1cm]
+	([yshift=\StagePadding]line6 -| apTop) --
+	([yshift=\StagePadding,xshift=\StageDepth]line6 -| apTop) -- 
+	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {St.~\circlenum{3}}
+	([yshift=-0.5*\StagePadding,xshift=\StageDepth]line7 -| apTop) --
+	([yshift=-0.5*\StagePadding]line7 -| apTop);
+
+	\end{tikzpicture}
+	\caption{Illustration of the security context overriding attack.}
+	\label{fig:securitycontext:overriding}
+\end{figure}
