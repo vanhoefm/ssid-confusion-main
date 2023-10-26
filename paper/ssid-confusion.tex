@@ -156,6 +156,10 @@ Finally, we give an overview of related work in Section~\ref{sec:relatedwork}, a
 
 This section will introduce relevant authentication methods defined in the IEEE 802.11 standard that underpins \wifi{}~\cite{ieee80211-2020}.
 
+\subsection{\red{Network detection --- connection process}}
+
+\red{Probe requests and responses.}
+
 \subsection{Home and Enterprise Authentication}
 
 Typically, we can identify two types of protected \wifi{} networks: home and Enterprise networks.
@@ -208,15 +212,42 @@ In this section, we introduce our SSID confusion attack, which was assigned \red
 
 \subsection{Attack Details}
 
+\subsubsection{Threat Model}
+
+In our SSID confusion attack, we assume that the victim wants to connect to the network \verb|TrustedSSID|.
+The goal of the adversary is to make the victim connect to \verb|OtherSSID| instead.
+\red{Our attack} assumes that the same credentials can be used to connect to both networks, for instance, the same enterprise credentials \red{frequently} work for both for a trusted local university \wifi{} network and an untrusted eduroam \wifi{} network (\red{recall Section~\ref{}}).
+%TODO: \red{Can make it connect to an SSID it has not ever connected to before.}
+We do not assume that the victim has ever connected to \verb|OtherSSID| before and the victim does not need to have \verb|OtherSSID| stored in its listed of \red{known networks}.
+
+\subsubsection{Attack Steps}
+
+The attack is illustrated in Figure~\ref{fig:ssidconfusion}.
+First, the adversary creates a rogue AP on a channel different from the network \verb|OtherSSID|.
+This rogue AP is used to establish a multi-channel machine-in-the-middle position~(MC-MitM) between the victim and \verb|OtherSSID|~\cite{vanhoef2018operating,thankappan2022multi}.
+In this position, the adversary will forward all frames between the victim and AP, and this MC-MitM is not detected by any existing client or AP \wifi{} implementations (see Section~\ref{sec:ocv}).
+
 \input{fig-ssid-confusion}
 
-\red{---TODO: Diagram: Advertise different SSID on another channel, forward frames to the real AP, handshake succeeds.---}
+In stage~\circlenum{1} of the attack, the adversary will forward any probe requests to the \red{AP}.
+If the probe requests contains an optional \red{SSID equal to TrustedNet}, then the adversary will replace TrustedNet with OtherNet, and will then forward the probe request.
+Similarly, any probe responses and beacons sent by the AP will be modified by replacing OtherSSID with TrustedSSID.
+As a result, the victim will think that the network TrustedSSID is nearby, even when it is not.
 
-\red{Can make it connect to an SSID it has not ever connected to before.}
+In stage~\circlenum{2} of the attack, the victim will attempt to connect with \red{TrustedSSID}.
+The starts with sending (open) authentication frames that are forward to from and the \red{OtherAP} without modification.
+Once (open) authentication completed, the \red{client} will send an association request that includes the SSID the client is connecting to.
+The adversary will rewrite \red{TrustedSSID} to \red{OtherSSID} before forwarding the association request to the AP.
+\red{The association response does not contain an SSID and can therefore be forwarded to the client without modification~\cite[Table~9-35]{ieee80211-2020}.}
+After association, an 802.1X authentication handshake is performed when connecting to an enterprise \wifi{} network.
+Finally, when connecting for the first time to any protected \wifi{} network, the \fourway{} handshake is used to negotiate fresh session keys to encrypted and authenticate data frames.
+Note that these negotiated keys are depending on the MAC addresses of the client and victim, but this does not impact the attack, because the MC-MitM allows the adversary to create a rogue clone of the AP using the same MAC address of \red{OtherSSID}.
+
+\red{---TODO: Explain that authentication succeeds even though we are connecting to a different network!!!!---}
 
 \input{table-authmethods}
 
-\subsection{Home Networks}
+\subsection{Home Network Authentication}
 
 \subsubsection{WEP}
 % https://www.mathyvanhoef.com/2015/03/codegate-2015-goodcrypto-advanced-wep.html
@@ -226,17 +257,17 @@ The old WEP protocol is also vulnerable, \red{which is still used by 1\% of all 
 
 \subsubsection{WPA3}
 
-\subsection{Enterprise Networks} % Enterprise networks 802.1X
+\subsection{Enterprise Network Authentication} % Enterprise networks 802.1X
 
 For an Enterprise network, a subsequent Fast BSS Transition would also still work, since it is not based on the SSID either.
 
-\subsection{Mesh Networks}
+\subsection{Mesh Network Authentication}
 
 With Mesh networks: ``In order to create a secure peering, mesh STAs first authenticate each other and create a mesh PMKSA. This can be done using either SAE or IEEE Std 802.1X. A mesh STA shall support SAE authentication (see 12.4). A mesh STA may support IEEE 802.1X authentication (see 4.10).''
 That is followed by AMPE which does not verify the SSID.
 So the attack is also possible for mesh networks.
 
-\subsection{Other}
+\subsection{Other Authentication Methods}
 
 \subsubsection{Fast BSS Transition}
 
@@ -258,17 +289,14 @@ Is it realistic that two networks share the same public key?
 \section{Optimization and evaluation}
 \label{sec:evaluation}
 
-%TODO: We won't actually request this CVE...
-\red{This vulnerability in} \verb|wpa_supplicant| \red{was assigned CVE-2023-XXXXXXX}.
-
-\subsection{Connection-Only Attack}
-
-Once a client has connected, does it check the SSID in the received beacons?
-If not, the attacker only needs to be present while connecting, and can then move the client back to the original channel.
+In this Section we evaluate our attack and propose an optimized version of our attack.
+Additionally, we estimate against how many enterprise users our attack is possible, and discuss the impact of channel validation on the attack.
 
 \subsection{Evaluation}
 
 We make a test tool again? So no full attack, but check all the preconditions.
+
+\input{table-evaluation}
 
 \red{---Test 1: configure using ``weak'' SSID. But manually change SSID to ``strong'' one in beacon, probe response (it is not in the association response). That simulates an attack. Does the client connect? Any other frames to change the SSID in?---}
 
@@ -276,6 +304,11 @@ We make a test tool again? So no full attack, but check all the preconditions.
 
 Our tool supports all major authentication methods: WEP, WPA2/3, WPA3 with SAE-Loop and SAE-Constant, PEAP, TTLS, EAP-PWD, and so on.
 Additionally, test can be performed while the network is using \red{MFP} or \red{beacon protection}.
+
+\subsection{Connection-Only Attack}
+
+Once a client has connected, does it check the SSID in the received beacons?
+If not, the attacker only needs to be present while connecting, and can then move the client back to the original channel.
 
 \subsection{Enterprise Evaluation}
 
@@ -313,18 +346,33 @@ Public \wifi{} Networks:
 
 
 \subsection{Impact of Channel Validation}
+\label{sec:ocv}
 
 \red{---TODO: What about performing the attack when channel validation is enabled? Probably just do a wormhole attack or be out of range of the original AP.---}
 
 \section{Defenses}
 \label{sec:defenses}
 
+In this section we propose, implement, and evaluate backwards-compatible defenses, and we propose updates to the 802.11 standard.
+
 \subsection{Beacon Protection}
+
+\subsubsection{Background}
+
+Starting with the \red{802.11be} amendment, also called \wifi{}~7, all \red{Access Points~(APs)} must support beacon protection~\cite{ieee-mentor-mandate-beaconprot}.
+When beacon protection is used, the AP will authenticate all transmitted beacons using a symmetric key.
+Clients obtain this symmetric key in the \fourway{} handshake when connecting to the network.
+
+When using beacon protection, an adversary is no longer able to change the SSID included in beacons \red{after the client has connected} (see stage~\circlenum{3} in Figure~\ref{fig:ssidconfusion}).
+This implies that an adversary would, in theory, be able to detect the SSID confusion attack \emph{after} being connected to the network.
 
 \subsubsection{Experiments}
 
 \red{---Can we still perform the attack when beacon protection is being used?---}
 %Doesn't look like it on Linux, see mac80211/mlme.c.
+
+%TODO: We won't actually request this CVE...
+\red{This vulnerability in} \verb|wpa_supplicant| \red{was assigned CVE-2023-XXXXXXX}.
 
 \subsubsection{Verification of pre-auth beacon}
 
@@ -356,12 +404,23 @@ Protocol changes:
 \section{Related Work}
 \label{sec:relatedwork}
 
-Related work!
+Cassola et al.\ attacked enterprise WPA2 networks by creating a rogue clone of the network, where the SSID of the rogue clone included extra invisible characters~\cite{cassola2013practical}.
+
+\red{Some kind of Apple continuity bug where the victim can be tricked into connecting to any SSID~\cite{stute2021disrupting}.}
+
+\red{The Tryst protocol proposed by Greenstein et al, which has as purpose to prevent user tracking, would also prevent our attack~\cite{greenstein2008improving}.
+Unfortunately, this protocol is not adopted in practice, and requires the client and AP to store additional state after the first connection.}
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-Need to authenticate the SSID!
+We highlighted that users, or their apps, make security-sensitive decisions based on the \red{SSID} they are connected to.
+For instance, a VPN can automatically get disabled when connected to a trusted SSID. 
+However, we demonstrated that the SSID can be \red{spoofed} by an adversary, even when enterprise \red{encryption} or home WPA3 \red{encryption} is used.
+\red{This is caused by a design flaw in the IEEE 802.11 standard and it was assigned CVE-2023-XXXXXXX}.
+
+A backwards-compatible defense is to use beacon protection and verifying the authenticity of \red{a reference beacon} before exchanging data frames.
+Alternatively, the 802.11 standard can be updated to authenticate the \red{SSID} of a network during the \fourway{} handshake.
 
 %\vspace{-0.05cm}
 \begin{acks}

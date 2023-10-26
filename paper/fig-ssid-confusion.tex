@@ -1,6 +1,12 @@
 % !TeX spellcheck = en_US
 \tikzset{cross/.style={cross out, draw=black,ultra thick, minimum size=15, inner sep=0pt, outer sep=0pt}, cross/.default={1pt}}
 
+\newcommand{\msgFromClient}[2]{\draw[-{\myarrow}] (clientTop |- #1) -- node[above,yshift=\LineMessageOffset] {#2} (attackerTop |- #1);}
+\newcommand{\msgToClient}[2]{\draw[{\myarrow}-] (clientTop |- #1) -- node[above,yshift=\LineMessageOffset] {#2} (attackerTop |- #1);}
+
+\newcommand{\msgFromAP}[2]{\draw[{\myarrow}-] (attackerTop |- #1) -- node[above,yshift=\LineMessageOffset] {#2} (apTop |- #1);}
+\newcommand{\msgToAP}[2]{\draw[-{\myarrow}] (attackerTop |- #1) -- node[above,yshift=\LineMessageOffset] {#2} (apTop |- #1);}
+
 \begin{figure}[t]
 	\centering
 	\begin{tikzpicture}
@@ -14,90 +20,123 @@
 		%minimum height=0.40cm
 	]
 	\def\myarrow{Straight Barb[width=6.4pt,length=3.2pt]};
-	\def\StageDepth{0.40cm};
-	\def\StagePadding{0.20cm};
+	\def\StageDepth{0.30cm};
+	\def\StagePadding{0.30cm};
 	\def\BubbleShiftX{0.10cm};
 	\def\BubbleShiftY{0.10cm};
 	
 	% ---------- Header and Vertical Lines ---------
 	
-	\node[fill=green!15, draw] (client) {Client};
-	\node[fill=red!15, draw,right=0.10cm of client.east] (attacker) {Attacker};
-	\node[fill=green!15, draw,right=5.50cm of client.west] (ap) {AP (Vulnerable)};
+	\node[fill=green!15, draw,minimum height=0.5cm] (client) {Client (vulnerable)};
+	\node[fill=red!15, draw,minimum height=0.5cm,right=0.65cm of client.east] (attacker) {Attacker (MC-MitM)};
+	\node[fill=green!15, draw,minimum height=0.5cm,right=6.70cm of client.west] (ap) {OtherAP};
 	
-	\def\TimelineShift{0.1cm}
-	\coordinate (clientTop) at ([xshift=\TimelineShift]client.south west);
-	\coordinate (attackerTop) at ([xshift=\TimelineShift]attacker.south west);
-	\coordinate (apTop) at ([xshift=-\TimelineShift]ap.south east);
+	\coordinate (clientTop) at ([xshift=0.1cm]client.south west);
+	\coordinate (attackerTop) at ([xshift=-0.5cm]attacker.south);
+	\coordinate (apTop) at ([xshift=-0.1cm]ap.south east);
 	
-	\def\TimelineSize{5.30cm}
+	\def\TimelineSize{9.35cm} % Length of the vertical lines
 	\draw[-] (clientTop) -- ([yshift=-\TimelineSize]clientTop);
 	\draw[-] (attackerTop) -- ([yshift=-\TimelineSize]attackerTop);
 	\draw[-] (apTop) -- ([yshift=-\TimelineSize]apTop);
 	
 	% ------------ Location of Messages -----------
 	
-	\def\LineOffset{0.70cm}
+	\def\LineOffset{0.60cm}
 	\def\LineOffsetContextLines{0.10cm}
 	\def\LineMessageOffset{-0.10cm}
-	\coordinate (line1) at ([yshift={-\LineOffset+\LineOffsetContextLines}]clientTop);
-	\coordinate (line2) at ([yshift={-\LineOffset-\LineOffsetContextLines}]line1);
+
+	\coordinate (line1) at ([yshift={-\LineOffset}]clientTop);
+	\coordinate (line2) at ([yshift={-\LineOffset}]line1);
 	\coordinate (line3) at ([yshift={-\LineOffset}]line2);
 	\coordinate (line4) at ([yshift={-\LineOffset}]line3);
 	\coordinate (line5) at ([yshift={-\LineOffset}]line4);
 	\coordinate (line6) at ([yshift={-\LineOffset}]line5);
-	\coordinate (line7) at ([yshift={-\LineOffset-2*\LineOffsetContextLines}]line6);
+	\coordinate (line7) at ([yshift={-\LineOffset-0.2cm}]line6);
+	\coordinate (line8) at ([yshift={-\LineOffset}]line7);
+	\coordinate (line9) at ([yshift={-\LineOffset-0.20cm}]line8);
+	\coordinate (line10) at ([yshift={-\LineOffset}]line9);
+	%\coordinate (line11) at ([yshift={-\LineOffset}]line10);
+	%\coordinate (line12) at ([yshift={-\LineOffset}]line11);
+	\coordinate (line13) at ([yshift={-\LineOffset}]line10);
+	\coordinate (line14) at ([yshift={-\LineOffset}]line13);
+	\coordinate (line15) at ([yshift={-\LineOffset-0.20cm}]line14);
+	\coordinate (line16) at ([yshift={-\LineOffset-0.20cm}]line15);
+	\coordinate (line17) at ([yshift={-\LineOffset}]line16);
 	
 	% ================== STAGE 1 ==================
 	
 	% Connection.
-	\draw[{\myarrow}-{\myarrow}, dashed] (line1) -- node[fill=white,draw=white,inner sep=1pt] {\emph{Connection}} (apTop |- line1);
-	
-	% Request.
-	\draw[-{\myarrow}] (clientTop |- line2) -- node[above,yshift=\LineMessageOffset] {Request} (apTop |- line2);
-	
+	\msgFromClient{line1}{ProbeReq(\red{[TrustedSSID]})};
+	\msgToAP{line1}{ProbeReq(\red{[OtherSSID]})}
+
+	\msgFromAP{line2}{ProbeResp(OtherSSID)}
+	\msgFromAP{line3}{Beacon(OtherSSID)}
+
+	\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line4node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]attackerTop |- line4) {Rewrite SSID to TrustedSSID};
+
+	\msgToClient{line5}{Probe Resp(TrustedSSID)};
+	\msgToClient{line6}{Beacon(TrustedSSID)};
+
 	% Brackets for Stage.
 	\draw[densely dashed, color=gray, rounded corners=0.1cm]
 	([yshift=\StagePadding]line1 -| apTop) --
 	([yshift=\StagePadding,xshift=\StageDepth]line1 -| apTop) -- 
-	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {St.~\circlenum{1}}
-	([yshift=-\StagePadding,xshift=\StageDepth]line2 -| apTop) --
-	([yshift=-\StagePadding]line2 -| apTop);
+	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{1}}
+	([yshift=-\StagePadding,xshift=\StageDepth]line6 -| apTop) --
+	([yshift=-\StagePadding]line6 -| apTop);
 	
-	% ================== STAGE 2 ==================
+	% =================
 	
-	% Re-Connection.
-	\draw[{\myarrow}-{\myarrow}, dashed] (attackerTop |- line4) -- node[fill=white,draw=white,inner sep=1pt] {\emph{Connect with the AP}} (apTop |- line4);
-	
-	% Bubbles.
-	\node[anchor=west,rounded corners=3pt,fill=white,draw] (line3node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]attackerTop |- line3) {Spoof Client MAC Address};
-	\node[anchor=east,rounded corners=3pt,fill=white,draw] (line5node) at ([xshift=\BubbleShiftX,yshift=\BubbleShiftY]apTop |- line5) {Generate New Key};
-	
-	% Brackets for Stage.
-	\draw[densely dashed, color=gray, rounded corners=0.1cm]
-	([yshift=\StagePadding]line3 -| apTop) --
-	([yshift=\StagePadding,xshift=\StageDepth]line3 -| apTop) -- 
-	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{2}}
-	([yshift=-\StagePadding,xshift=\StageDepth]line5 -| apTop) --
-	([yshift=-\StagePadding]line5 -| apTop);
-	
-	% ================== STAGE 3 ==================
+	\node[anchor=west,rounded corners=3pt,fill=white,draw] (line7node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]clientTop |- line7) {Connect to TrustedSSID};
 
-	% Response.
-	\draw[-{\myarrow}] (apTop |- line7) -- node[above,yshift=\LineMessageOffset] {Response} (attackerTop |- line7);
-	
-	% Bubbles.
-	\node[anchor=east,rounded corners=3pt,fill=white,draw] (line6node) at ([xshift=\BubbleShiftX,yshift=-\BubbleShiftY]apTop |- line6) {Encrypt Response with New Key};
-	
+	\draw[{\myarrow}-{\myarrow}] (clientTop |- line8) -- node[fill=white,yshift=-0.02cm] {\emph{(Open) Authentication}} (apTop |- line8);
+
+	\msgFromClient{line9}{AssocReq(TrustedSSID)};
+	\msgToAP{line9}{AssocReq(OtherSSID)}
+
+	%\msgFromAP{line10}{AssocResp(OtherSSID)};
+	%\msgToClient{line10}{AssocResp(TrustedSSID)};
+
+	\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line10node) at ([xshift=-\BubbleShiftX,yshift=-0.0cm]attackerTop |- line10) {Rewrite};
+
+	\draw[{\myarrow}-] (clientTop |- line10) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocResp} (line10node.west);
+	\draw[{\myarrow}-] (line10node.east) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocResp} (apTop |- line10);
+
+	% line11: rewrite
+	% line12: forward to client
+
+	\draw[{\myarrow}-{\myarrow},dashed] (clientTop |- line13) -- node[fill=white,yshift=-0.02cm] {\emph{Optional 802.1X authentication}} (apTop |- line13);
+
+	\draw[{\myarrow}-{\myarrow}] (clientTop |- line14) -- node[fill=white,yshift=-0.02cm] {\emph{\fourway{} handshake}} (apTop |- line14);
+
 	% Brackets for Stage.
 	\draw[densely dashed, color=gray, rounded corners=0.1cm]
-	([yshift=\StagePadding]line6 -| apTop) --
-	([yshift=\StagePadding,xshift=\StageDepth]line6 -| apTop) -- 
-	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {St.~\circlenum{3}}
-	([yshift=-0.5*\StagePadding,xshift=\StageDepth]line7 -| apTop) --
-	([yshift=-0.5*\StagePadding]line7 -| apTop);
+	([yshift=\StagePadding]line7 -| apTop) --
+	([yshift=\StagePadding,xshift=\StageDepth]line7 -| apTop) -- 
+	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{2}}
+	([yshift=-\StagePadding,xshift=\StageDepth]line14 -| apTop) --
+	([yshift=-\StagePadding]line14 -| apTop);
+
+	% =================
+
+	\draw[{\myarrow}-{\myarrow},dashed] (clientTop |- line14) -- node[fill=white,yshift=-0.03cm] {\emph{\fourway{} handshake}} (apTop |- line14);
+
+	\draw[{\myarrow}-{\myarrow}] (clientTop |- line15) -- node[fill=white,yshift=-0.02cm] {\emph{Exchange data frames}} (apTop |- line15);
+
+	\node[anchor=center,rounded corners=3pt,fill=red!16,draw] (line16node) at ([xshift=-\BubbleShiftX,yshift=-0.0cm]attackerTop |- line16) {Rewrite};
+
+	\draw[{\myarrow}-] (clientTop |- line16) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {Beacon(TrustedSSID)} (line16node.west);
+	\draw[{\myarrow}-] (line16node.east) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {Beacon(OtherSSID)} (apTop |- line16);
+
+	\draw[densely dashed, color=gray, rounded corners=0.1cm]
+	([yshift=\StagePadding]line15 -| apTop) --
+	([yshift=\StagePadding,xshift=\StageDepth]line15 -| apTop) -- 
+	node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{3}}
+	([yshift=-\StagePadding,xshift=\StageDepth]line16 -| apTop) --
+	([yshift=-\StagePadding]line16 -| apTop);
 
 	\end{tikzpicture}
-	\caption{Illustration of the security context overriding attack.}
-	\label{fig:securitycontext:overriding}
+	\caption{SSID confusion attack: the client thinks it is connecting to \texttt{TrustedSSID} but in reality it is connecting to \texttt{OtherSSID}.}
+	\label{fig:ssidconfusion}
 \end{figure}
