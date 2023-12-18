@@ -1,6 +1,6 @@
 % short papers with a length of up to 6 pages (including bibliography and appendices)
 %TODO: Include the anonymous tag
-\documentclass[sigconf,review]{acmart}
+\documentclass[sigconf,review,anonymous]{acmart}
 %\settopmatter{printfolios=true}
 \usepackage[inline]{enumitem}
 \usepackage{xcolor}
@@ -37,16 +37,10 @@
 
 \begin{document}
 
-\title{SSID Confusion: Network Name Spoofing Attacks against \wifi{}}
-
-\author{Mathy Vanhoef}
-\affiliation{%
-	\institution{DistriNet, KU Leuven}
-	\city{Leuven}
-	\country{Belgium}
-}
-\email{Mathy.Vanhoef@kuleuven.be}
-\orcid{0000-0002-8971-9470}
+% Spoofing the Name of Protected \wifi{} Networks}
+% Unknowingly Connecting to the Wrong Network
+\title{SSID Confusion:
+Making \wifi{} Clients\\ Connect to the Wrong Network}
 
 \author{Héloïse Gollier}
 \affiliation{%
@@ -56,6 +50,15 @@
 }
 \email{heloise.gollier@kuleuven.be}
 \orcid{0000-0000-0000-0000}
+
+\author{Mathy Vanhoef}
+\affiliation{%
+	\institution{DistriNet, KU Leuven}
+	\city{Leuven}
+	\country{Belgium}
+}
+\email{Mathy.Vanhoef@kuleuven.be}
+\orcid{0000-0002-8971-9470}
 
 \renewcommand{\shortauthors}{Mathy Vanhoef, Xianjun Jiao, Wei Liu \& Ingrid Moerman}
 
@@ -100,10 +103,13 @@
 % \received[accepted]{5 June 2009}
 
 \begin{abstract}
-When connecting to a protected \wifi{} networks, the client and network mutually authenticate each other, and subsequently protect all transmitted data frames.
-Once connected, the user can see which network they are connected to, and make security decisions based on this.
-However, in this paper we demonstrate that a client can be tricked into connecting to a different (protected) \wifi{} network than the one it intended to connect to.
-The root cause is a design flaw in the IEEE 802.11 standard: the network name (SSID) is not always authenticated.
+%When connecting to a protected \wifi{} network, the client and network mutually authenticate each other, and subsequently protect all transmitted data frames.
+When using protected \wifi{} protocols such as WPA2 and WPA3, the access point that you connect to is authenticated by the client.
+%Once connected, the user can see which network they are connected to, and make security decisions based on this.
+This prevents an adversary from creating a rogue clone of the \wifi{} network, and implies that the name of a network, called SSID, cannot be spoofed.
+%
+However, in this paper we demonstrate that a client can be tricked into connecting to a different protected \wifi{} network than the one it intended to connect to. That is, the client's user interface will show a different SSID than the one of the actual network it is connected to.
+The root cause is a design flaw in the IEEE 802.11 standard, namely, the SSID is not always authenticated.
 We demonstrate the practical impact of this attack, find that all devices are vulnerable to the attack, and propose backwards-compatible defenses as well as updates to the standard.
 \end{abstract}
 
@@ -113,24 +119,29 @@ We demonstrate the practical impact of this attack, find that all devices are vu
 
 When connecting to a protected \wifi{} network, all transmitted data will be encrypted and authenticated.
 One would also reasonably expect that the name of the \wifi{} network as shown by the client, called the Service Set Identifier~(SSID), it also trustworthy.
-In other words, if a client believes (and shows to the user) that it is connected to the protected \wifi{} network \verb|university|, \red{then one would expect that an adversary cannot trick the client into showing a different SSID}.
+In other words, if a client believes, and shows to the user, that it is connected to the protected \wifi{} network \verb|TrustedNet|, then one would expect that an adversary cannot trick the client into showing a different SSID.
 
-We first highlight that significant trust is (indirectly) placed on the SSID that a client thinks it is connected to.
+In this paper, we first highlight that significant trust is placed on the SSID that a client thinks it is connected to.
 One example is that many VPNs, such as Clouldflare's WARP VPN, hide.me, and Windscribe, can automatically disable the VPN with connected to a trusted \wifi{} network.
 These apps recognize the \wifi{} network based on its SSID.
 
 Our SSID confusion attack can trick a vulnerable client into connecting to, and mutually authenticating with, a different network than it thinks it is connecting to.
-The root cause is that, although credentials are mutually authenticated when connecting to a protected \wifi{} network, the name of the network is \emph{not} authenticated.
-Only when using home networks with WPA1/2 or version~2 of WPA3 is the \red{SSID} indirectly authenticated.
+The root cause is that, although passwords or other credentials are mutually verified when connecting to a protected \wifi{} network, the name of the network is \emph{not} guaranteed to be authenticated.
 
-We can make the victim connect to SSID B but the user thinks it is connected to SSID A.
-This works against Enterprise networks that use the same radius server and against home WEP and \red{WPA3 version 1} networks that use the same password.
+In our attack, when the victim wants to connect to the network \verb|TrustedNet|, we can trick the victim into connecting to a different network \verb|BadNet| that uses similar credentials.
+As a result, the victim's client will think, and show to the user, that is is connected to \verb|TrustedNet|, while in reality it is connected to \verb|BadNet|.
+% that use the same radius server
+% that use the same password
+We found that this attack works against Enterprise networks, home WEP networks, and WPA3 version 1 home networks, as long as the credentials used to connect with \verb|TrustedNet| and \verb|BadNet| are similar.
+We demonstrate how this can enable an adversary to intercept the victim's traffic and how this can cause a victim to automatically turn off its VPN connection.
+%Our analysis and experiments show that the attack is not possible against home networks that use WPA1/2 or that use version~2 of WPA3.
 
-Several backwards-compatible defenses exist to prevent the attack.
-First, beacon protection can be enabled, and the client must then capture a beacon before completing \red{the handshake} and verify the authenticity of \red{this reference beacon}.
+To defend against the attack, we propose and evaluate several backwards-compatible defenses.
+First, beacon protection can be enabled, where the client captures a beacon before completing the handshake. and afterwards verifies the authenticity of this captured reference beacon.
 Because the beacon contains the SSID of the network, authenticating the beacon means that the SSID is now also authenticated.
 Another defense for home networks is to use a unique password for every SSID, and for enterprise networks one defense is to use a different \red{CommonName} for the RADIUS server for each SSID.
-Ideally, the IEEE 802.11 standard that underpins \wifi{} is also updated to always authenticated the SSID in the \fourway{} handshake, which would assure that the SSID is always authenticated.
+Alternatively, the IEEE 802.11 standard that underpins \wifi{} can be updated to always authenticate the SSID in the \fourway{} handshake, which would assure that the SSID is always authenticated.
+%though doing so may not be backwards-compatible with existing clients
 
 To summarize, our contributions are:
 \begin{itemize}
@@ -156,75 +167,82 @@ Finally, we give an overview of related work in Section~\ref{sec:relatedwork}, a
 
 This section will introduce relevant authentication methods defined in the IEEE 802.11 standard that underpins \wifi{}~\cite{ieee80211-2020}.
 
-\subsection{\red{Network detection --- connection process}}
+\subsection{\red{Network detection and connection}}
 
-\red{Probe requests and responses.}
+\red{---TODO: Explain probe requests and responses. Also beacons. Already mention beacon protection here?---}
 
 \subsection{Home and Enterprise Authentication}
-
-Typically, we can identify two types of protected \wifi{} networks: home and Enterprise networks.
+There are two types of protected \wifi{} networks: home and Enterprise networks.
 Home networks are protected by a pre-shared password that all users posses.
 In contrast, Enterprise networks use the 802.1X protocol for authentication.
 This enables the network to use any Extensible Authentication Protocol (EAP) it desires: authentication can be done based on a username and password, using certificates, using one-time passwords, and so on.
 
-Overview of authentication? Mention that the certificate is verified, and/or the username and password, but never the SSID.
+\red{---TODO: Explain how keys are derived in home WPA1/2 and WPA3 version 1 and 2 networks.
+This already would hint that sometimes the SSID is indirectly authenticated but not always.---}
 
-Contrast with home network: the SSID is verified during the handshake.
-Cannot sneakily make a victim connect to a different network, even if both networks use the same password.
+\red{---TODO: Now explain key heirarchy for Enterprise networks?---}
+
 
 \subsection{Infrastructure and Mesh Networks}
 
-Broadly speaking, a \wifi{} network can operate in \red{multiple modes}, with two of the most common ones being infrastructure and mesh mode.
-In infrastructure networks, there is a single central Access Point~(AP), and all clients connect and authenticate with this AP.
+A \wifi{} network can operate in \red{multiple modes}, with two of the most common modes being infrastructure and mesh mode.
+In an infrastructure network, there is a single centralized Access Point~(AP), and all clients connect and authenticate with this AP.
 %TODO: More detail. Who to authenticiate with?
 \red{In contrast, in a mesh network there is no central fixed node.}
 
-\red{---TODO: What about beacon protection in mesh networks? And what about groups keys in general?---}
+\red{---TODO: What about beacon protection in mesh networks? Or what about groups keys in mesh networks (since beacon key is essentially a gruop key)?---}
 
 \subsection{Authentication Method Reuse}
 
-In practice, it can often occur that a client can use the same authentication methods, and corresponding credentials, to connect to different \red{SSIDs}.
+In practice, it can often occur that a client can use the same authentication method, and corresponding credentials, to connect to different networks, i.e., to connect to different SSIDs.
 A common example is when different SSIDs are advertised for each frequency band, e.g., there might be two networks called \verb|eduroam| and \verb|eduroam-2.4| for the 5 and 2.4~GHz band, respectively.
-This is sometimes done because certain clients do not automatically use the \red{typically faster} 5 GHz band, and with this naming, by default devices will use the 5~GHz band, unless the client explicitly connects to the 2.4~GHz SSID.
+This can done because certain clients do not automatically use the faster 5 GHz band,
+but by using different SSIDs,
+such client be be explicitly configured to only connect to the 5~GHz SSID.
+%and with this naming, by default devices will use the 5~GHz band, unless the client explicitly connects to the 2.4~GHz SSID.
 % We cite several sources where enabling MFP or similar would cause issues, so one network is basic, and the other has all the extensions.
-Additionally, networks in \red{newer} frequency bands typically support more features, including security features such as Management Frame Protection~\cite{schepers2021let}, and are therefore on average more secure than the 2.4~GHz SSID.
+Additionally, networks in \red{newer} frequency bands typically support more features, including security features such as Management Frame Protection, and are therefore considered more secure than the 2.4~GHz variant of the network~\cite{schepers2021let}.
 %TODO: Other security features?
 %TODO: What about 6 GHz?
 
-Another use-case is where a university employee can use the same credentials \red{and RADIUS configuration} to connect to both their own university network and the eduroam networks.
+Another use-case where different SSIDs use the same authentication method, is when a university employees can use the same username and password to connect to both their own university network and any eduroam network.
 
-\red{---The 2.4 variant can be broadcasted by older APs that are more likely to be vulnerable to attacks, such as KRACK or FragAttacks. Can't leak the key but still leak/inject traffic sort of similar to Enterprise attack.---}
-
-\subsection{Auto-Disabling VPNs on Trusted Networks}
-
-CloudFlare's 1.1.1.1: can be abused to disable a victim's VPN.
-
-\subsection{Different SSID per Frequency Band}
-
-2.4 vs 5 GHz network, different management frame protection options.
-
-2.4 AP may be older and vulnerable to KRACK/FragAttacks.
 
 \section{The SSID Confusion Attack}
 \label{sec:attack}
 
-In this section, we introduce our SSID confusion attack, which was assigned \red{CVE-2023-XXXXXXX}, and systematically analyze which authentication methods are vulnerable.
+In this section, we introduce our threat model and the SSID confusion attack, and systematically analyze which authentication methods are vulnerable.
+The vulnerability was assigned \red{CVE-2023-XXXXXXX}.
 
-\subsection{Attack Details}
-
-\subsubsection{Threat Model}
+\subsection{Threat Model}
 
 In our SSID confusion attack, we assume that the victim wants to connect to the network \verb|TrustedSSID|.
 The goal of the adversary is to make the victim connect to \verb|OtherSSID| instead.
-\red{Our attack} assumes that the same credentials can be used to connect to both networks, for instance, the same enterprise credentials \red{frequently} work for both for a trusted local university \wifi{} network and an untrusted eduroam \wifi{} network (\red{recall Section~\ref{}}).
+\red{Our attack} assumes that the same credentials can be used to connect to both networks, for instance,
+%\red{as shown in the next sections},
+the same enterprise credentials \red{frequently} work for both for a trusted local university \wifi{} network and an untrusted eduroam \wifi{} network (\red{see also Section~\ref{sec:eval:ent}}).
 %TODO: \red{Can make it connect to an SSID it has not ever connected to before.}
-We do not assume that the victim has ever connected to \verb|OtherSSID| before and the victim does not need to have \verb|OtherSSID| stored in its listed of \red{known networks}.
+Note that we do not assume that the victim has ever connected to \verb|OtherSSID| before, and more generally, the victim does not need to have \verb|OtherSSID| stored in its list of \red{known networks}.
+In the next sections, we give motivating examples of the impact that tricking a victim into connecting to a different protected \wifi{} network can have in practice.
 
-\subsubsection{Attack Steps}
+\red{---TODO: Note that an attack only makes sense if the adversary does not know the password, otherwise they can just put up a rogue AP.---}
 
-The attack is illustrated in Figure~\ref{fig:ssidconfusion}.
+\subsubsection{Auto-Disabling VPNs on Trusted Networks}
+
+%TODO: This becomes a *study* of VPNs so it shouldn't be in the background
+\red{---CloudFlare's 1.1.1.1: can be abused to disable a victim's VPN. Also other VPNs.---}
+
+\subsubsection{Different SSID per Frequency Band}
+
+\red{---2.4 vs 5 GHz network, different management frame protection options.---}
+
+\red{---The 2.4 variant can be broadcasted by older APs that are more likely to be vulnerable to attacks, such as KRACK or FragAttacks. Can't leak the key but still leak/inject traffic sort of similar to Enterprise attack.---}
+
+\subsection{Attack Details}
+
+The attack is shown in Figure~\ref{fig:ssidconfusion}.
 First, the adversary creates a rogue AP on a channel different from the network \verb|OtherSSID|.
-This rogue AP is used to establish a multi-channel machine-in-the-middle position~(MC-MitM) between the victim and \verb|OtherSSID|~\cite{vanhoef2018operating,thankappan2022multi}.
+This rogue AP is used to establish a multi-channel machine-in-the-middle position~(MC-MitM) between the victim and \verb|OtherSSID|~\mbox{\cite{vanhoef2018operating,thankappan2022multi}}.
 In this position, the adversary will forward all frames between the victim and AP, and this MC-MitM is not detected by any existing client or AP \wifi{} implementations (see Section~\ref{sec:ocv}).
 
 \input{fig-ssid-confusion}
@@ -235,15 +253,16 @@ Similarly, any probe responses and beacons sent by the AP will be modified by re
 As a result, the victim will think that the network TrustedSSID is nearby, even when it is not.
 
 In stage~\circlenum{2} of the attack, the victim will attempt to connect with \red{TrustedSSID}.
-The starts with sending (open) authentication frames that are forward to from and the \red{OtherAP} without modification.
-Once (open) authentication completed, the \red{client} will send an association request that includes the SSID the client is connecting to.
+The connection process starts by sending and receiving an (open) authentication frame that are forward to from and the \red{OtherAP} without modification.
+Once (open) authentication completed, the client will send an association request that includes the SSID the client is connecting to.
 The adversary will rewrite \red{TrustedSSID} to \red{OtherSSID} before forwarding the association request to the AP.
-\red{The association response does not contain an SSID and can therefore be forwarded to the client without modification~\cite[Table~9-35]{ieee80211-2020}.}
+The association response does not contain an SSID and can therefore be forwarded to the client without modification~\mbox{\cite[Table~9-35]{ieee80211-2020}}.
 After association, an 802.1X authentication handshake is performed when connecting to an enterprise \wifi{} network.
-Finally, when connecting for the first time to any protected \wifi{} network, the \fourway{} handshake is used to negotiate fresh session keys to encrypted and authenticate data frames.
-Note that these negotiated keys are depending on the MAC addresses of the client and victim, but this does not impact the attack, because the MC-MitM allows the adversary to create a rogue clone of the AP using the same MAC address of \red{OtherSSID}.
+%TODO: when connecting for the first time to any protected \wifi{} network,
+Finally, the \fourway{} handshake is used to negotiate fresh session keys to encrypted and authenticate data frames.
+Note that these negotiated keys are dependent on the MAC addresses of the client and victim, but this does not impact the attack, because the MC-MitM allows the adversary to create a rogue clone of the AP using the same MAC address as that of \red{OtherSSID}.
 
-\red{---TODO: Explain that authentication succeeds even though we are connecting to a different network!!!!---}
+\red{---TODO: Explain that authentication succeeds even though we are connecting to a different network!---}
 
 \input{table-authmethods}
 
@@ -255,17 +274,22 @@ The old WEP protocol is also vulnerable, \red{which is still used by 1\% of all 
 
 \subsubsection{WPA1/2}
 
+\red{---Home networks are not vulnerable because the PMK is influenced by the SSID.---}
+
 \subsubsection{WPA3}
+
+\red{---For home networks, version~1 of WPA3 is vulnerable because the SSID never influences the PMK, but version~2 is not vulnerable because then the SSID does influence the PMK.---}
 
 \subsection{Enterprise Network Authentication} % Enterprise networks 802.1X
 
-For an Enterprise network, a subsequent Fast BSS Transition would also still work, since it is not based on the SSID either.
+\red{All Enterprise networks are vulnerable, so WPA1/2/3 is all vulnerable.
+For an Enterprise network, a subsequent Fast BSS Transition would also still work, since it is not based on the SSID either.}
 
 \subsection{Mesh Network Authentication}
 
-With Mesh networks: ``In order to create a secure peering, mesh STAs first authenticate each other and create a mesh PMKSA. This can be done using either SAE or IEEE Std 802.1X. A mesh STA shall support SAE authentication (see 12.4). A mesh STA may support IEEE 802.1X authentication (see 4.10).''
+\red{---TODO: With Mesh networks: ``In order to create a secure peering, mesh STAs first authenticate each other and create a mesh PMKSA. This can be done using either SAE or IEEE Std 802.1X. A mesh STA shall support SAE authentication (see 12.4). A mesh STA may support IEEE 802.1X authentication (see 4.10).''
 That is followed by AMPE which does not verify the SSID.
-So the attack is also possible for mesh networks.
+So the attack is also possible for mesh networks it seems.---}
 
 \subsection{Other Authentication Methods}
 
@@ -286,63 +310,55 @@ Is it realistic that two networks share the same public key?
 
 \red{---TODO: What about the short SSID in the FILS frames?---}
 
-\section{Optimization and evaluation}
+\section{Attack Optimization and evaluation}
 \label{sec:evaluation}
 
-In this Section we evaluate our attack and propose an optimized version of our attack.
-Additionally, we estimate against how many enterprise users our attack is possible, and discuss the impact of channel validation on the attack.
+In this section we first evaluate our attack and then propose an optimized version of our attack.
+Additionally, we estimate against how many enterprise users our attack is possible, and discuss the impact of channel validation on our attack.
 
 \subsection{Evaluation}
 
-We make a test tool again? So no full attack, but check all the preconditions.
-
 \input{table-evaluation}
 
-\red{---Test 1: configure using ``weak'' SSID. But manually change SSID to ``strong'' one in beacon, probe response (it is not in the association response). That simulates an attack. Does the client connect? Any other frames to change the SSID in?---}
+\red{---Describe the test tool that simulates the MC-MitM to more easily test various clients. So configure Hostapd using the OtherSSID, and modify Hostapd to change this SSID to TrustedSSID in transmitted beacons, transmitted probe responses, and received association requests. That simulates a MC-MitM attack. Now check whether different clients (Linux, Windows, iOS, etc) still successfully connect.---}
 
-\red{---Test 2: change the SSID in the beacon only after connecting. Both with and without beacon protection.---}
-
-Our tool supports all major authentication methods: WEP, WPA2/3, WPA3 with SAE-Loop and SAE-Constant, PEAP, TTLS, EAP-PWD, and so on.
+Our test tool supports all major authentication methods: WEP, WPA2/3, WPA3 with SAE-Loop and SAE-Constant, PEAP, TTLS, EAP-PWD, and so on.
 Additionally, test can be performed while the network is using \red{MFP} or \red{beacon protection}.
 
-\subsection{Connection-Only Attack}
+\subsection{Optimized Connection-Only Attack}
 
-Once a client has connected, does it check the SSID in the received beacons?
-If not, the attacker only needs to be present while connecting, and can then move the client back to the original channel.
+Once a client has connected, most clients no longer check the SSID in the received beacons.
+This means the attacker only needs to be present while the victim is connecting to the network, and can then move the client back to the original channel.
+
+\red{---Describe how implemented in test tool: change the SSID in the beacon only after connecting. Test several clients. Test both with and without beacon protection??---}
+
 
 \subsection{Enterprise Evaluation}
-
-\red{Telenet plaintext behavior, reply time}
+\label{sec:eval:ent}
 
 Example attack scenarios Enterprise:
 \begin{itemize}
-	\item Eduroam and local \wifi{} network that use the same authentication.
+	\item Eduroam and home university \wifi{} network that use the same authentication.
 	Scrape eduroam and look if the radius server is also used in other configuration guides.
+
+	Based on scraping of the tools, we found 6 vulnerable organizations:
+	eduroam.technion.ac.il
+	nac.temple.edu
+	radius.kuleuven.be
+	radius.vse.cz
+	radius.york.ac.uk
+	val.ul.ie
+
+	%TODO: \red{---TODO: Also check for public key reuse, but difference CommonName, under the assumption that the client might check the public key but not the CommonName.---} ==> This didn't immediately seem the case, so this has low priority...
+
 	\item Telenet Wi-Free and KU Leuven university login.
 	Home users can now intercept traffic!
+	Confirm key is stored in AP by \red{Telenet's plaintext behavior, reply time, and disconnecting coax cable}.
+	
+	Also citiwifi in Luxembourg and \verb|luxfuturelab.lu| which is a similar attack (Public \wifi{} Networks).
 \end{itemize}
 
-We can test these attacks at multiple devices as well.
-
-Based on scraping of the tools, we found 6 vulnerable organizations:
-eduroam.technion.ac.il
-nac.temple.edu
-radius.kuleuven.be
-radius.vse.cz
-radius.york.ac.uk
-val.ul.ie
-
-\red{---TODO: Also check for public key reuse?---}
-
-Example attack scenarios WPA3.
-Note that an attack only makes sense if the adversary does not know the password, otherwise they can just put up a rogue AP.
-
-Public \wifi{} Networks:
-
-\begin{itemize}
-	\item TELENET Wi-Free
-	\item citiwifi in Luxembourg and \verb|luxfuturelab.lu|
-\end{itemize}
+We can test these attacks at multiple devices as well, though they have a high chance to simply work.
 
 
 \subsection{Impact of Channel Validation}
@@ -368,7 +384,7 @@ This implies that an adversary would, in theory, be able to detect the SSID conf
 
 \subsubsection{Experiments}
 
-\red{---Can we still perform the attack when beacon protection is being used?---}
+\red{---Can we still perform the attack when beacon protection is being used? Probably yes, because the beacons only get verified once connected, at least by wpa\_supplicant.---}
 %Doesn't look like it on Linux, see mac80211/mlme.c.
 
 %TODO: We won't actually request this CVE...
@@ -376,7 +392,7 @@ This implies that an adversary would, in theory, be able to detect the SSID conf
 
 \subsubsection{Verification of pre-auth beacon}
 
-Normally a reference beacon should be saved, which is then checked once connected.
+Normally a reference beacon should be saved, which is then checked once connected~\cite{vanhoef-wisec2020}.
 This is currently not done by Linux.
 
 \red{Demonstrate that the attack is prevented in all cases when the AP and client use beacon protection, with reference beacon comparison, and optionally with SSID checking in received beacons.}

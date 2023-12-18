@@ -67,13 +67,14 @@
 	% ================== STAGE 1 ==================
 	
 	% Connection.
-	\msgFromClient{line1}{ProbeReq(\red{[TrustedSSID]})};
-	\msgToAP{line1}{ProbeReq(\red{[OtherSSID]})}
+	% We don't mention that and SSID can be in the ProbeRequest since this is now rare in practise, and because then we would have to add a rewrite bubble already.
+	\msgFromClient{line1}{ProbeReq};
+	\msgToAP{line1}{ProbeReq}
 
 	\msgFromAP{line2}{ProbeResp(OtherSSID)}
 	\msgFromAP{line3}{Beacon(OtherSSID)}
 
-	\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line4node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]attackerTop |- line4) {Rewrite SSID to TrustedSSID};
+	\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line4node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]attackerTop |- line4) {Rewrite OtherSSID to TrustedSSID};
 
 	\msgToClient{line5}{Probe Resp(TrustedSSID)};
 	\msgToClient{line6}{Beacon(TrustedSSID)};
@@ -92,16 +93,16 @@
 
 	\draw[{\myarrow}-{\myarrow}] (clientTop |- line8) -- node[fill=white,yshift=-0.02cm] {\emph{(Open) Authentication}} (apTop |- line8);
 
-	\msgFromClient{line9}{AssocReq(TrustedSSID)};
-	\msgToAP{line9}{AssocReq(OtherSSID)}
+	\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line9node) at ([xshift=-\BubbleShiftX,yshift=-0.0cm]attackerTop |- line9) {Rewrite};
+
+	\draw[-{\myarrow}] (clientTop |- line9) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocReq(TrustedSSID)\phantom{a}} (line9node.west);
+	\draw[-{\myarrow}] (line9node.east) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocReq(OtherSSID)\phantom{a}} (apTop |- line9);
 
 	%\msgFromAP{line10}{AssocResp(OtherSSID)};
 	%\msgToClient{line10}{AssocResp(TrustedSSID)};
 
-	\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line10node) at ([xshift=-\BubbleShiftX,yshift=-0.0cm]attackerTop |- line10) {Rewrite};
-
-	\draw[{\myarrow}-] (clientTop |- line10) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocResp} (line10node.west);
-	\draw[{\myarrow}-] (line10node.east) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocResp} (apTop |- line10);
+	\msgToClient{line10}{AssocResp};
+	\msgFromAP{line10}{AssocResp}
 
 	% line11: rewrite
 	% line12: forward to client
@@ -137,6 +138,7 @@
 	([yshift=-\StagePadding]line16 -| apTop);
 
 	\end{tikzpicture}
-	\caption{SSID confusion attack: the client thinks it is connecting to \texttt{TrustedSSID} but in reality it is connecting to \texttt{OtherSSID}.}
+	\caption{SSID confusion attack: the client thinks it is connecting to \texttt{TrustedSSID} but in reality it is connecting to \texttt{OtherSSID}.
+	\red{---TODO: Call it TrustedNet or TrustedSSID?---}}
 	\label{fig:ssidconfusion}
 \end{figure}

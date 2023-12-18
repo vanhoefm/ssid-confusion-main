@@ -1,9 +1,12 @@
 \begin{table}
 	\caption{Experiments against various clients.
-	\red{Yes to standard means that the attacks indeed works against the protocols listed as vulnerable in Section~\ref{sec:attack}.}}
+	\red{Yes means that the attack indeed works against the protocols listed as vulnerable in Section~\ref{sec:attack}.
+	---TODO: Is a difference between home and enterprise needed? Or infrastructure vs mesh?---}}
 	\begin{tabular}{lll}
 		\toprule
-		Device & Standard & \red{Conn-Only} \\
+		& \multicolumn{2}{c}{Attack Type} \\
+		\cmidrule{2-3}
+		Device & Standard & Connection-Only \\
 		\midrule
 		Windows & \red{Yes} & \\
 		iOS \\
