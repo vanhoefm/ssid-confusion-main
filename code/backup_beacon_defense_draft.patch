@@ -1,0 +1,479 @@
+diff --git a/hostapd/ctrl_iface.c b/hostapd/ctrl_iface.c
+index 9dd73e1b1..385bba4f6 100644
+--- a/hostapd/ctrl_iface.c
++++ b/hostapd/ctrl_iface.c
+@@ -2425,8 +2425,12 @@ static int hostapd_ctrl_fakessid(struct hostapd_data *hapd, const char *ssid)
+ 				broadcast_ether_addr,
+ 				hapd->last_bigtk_key_idx, 0, 0, NULL, 0,
+ 				NULL, 0,
+-				KEY_FLAG_GROUP) < 0)
++				KEY_FLAG_GROUP) < 0) {
++		printf("===> Failed to remove BIGTK?!\n");
+ 		return -1;
++	}
++
++	printf("===> Remove BIGTK in kernel normally...\n");
+ 
+ 	return 0;
+ }
+diff --git a/hostapd/hostapd.conf b/hostapd/hostapd.conf
+index 935366ffb..5fba19b99 100644
+--- a/hostapd/hostapd.conf
++++ b/hostapd/hostapd.conf
+@@ -1737,7 +1737,7 @@ own_ip_addr=127.0.0.1
+ # Note that WPA3 is also configured with bit1 since it uses RSN just like WPA2.
+ # In other words, for WPA3, wpa=2 is used the configuration (and
+ # wpa_key_mgmt=SAE for WPA3-Personal instead of wpa_key_mgmt=WPA-PSK).
+-#wpa=2
++wpa=2
+ 
+ # Extended Key ID support for Individually Addressed frames
+ #
+@@ -1757,7 +1757,7 @@ own_ip_addr=127.0.0.1
+ # wpa_psk (dot11RSNAConfigPSKValue)
+ # wpa_passphrase (dot11RSNAConfigPSKPassPhrase)
+ #wpa_psk=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+-#wpa_passphrase=secret passphrase
++wpa_passphrase=abcdefgh
+ 
+ # Optionally, WPA PSKs can be read from a separate text file (containing list
+ # of (PSK,MAC address) pairs. This allows more than one PSK to be configured.
+@@ -1798,7 +1798,8 @@ own_ip_addr=127.0.0.1
+ # DPP = Device Provisioning Protocol
+ # OSEN = Hotspot 2.0 online signup with encryption
+ # (dot11RSNAConfigAuthenticationSuitesTable)
+-#wpa_key_mgmt=WPA-PSK WPA-EAP
++#wpa_key_mgmt=SAE
++wpa_key_mgmt=SAE
+ 
+ # Set of accepted cipher suites (encryption algorithms) for pairwise keys
+ # (unicast packets). This is a space separated list of algorithms:
+@@ -1817,7 +1818,7 @@ own_ip_addr=127.0.0.1
+ # Pairwise cipher for WPA (v1) (default: TKIP)
+ #wpa_pairwise=TKIP CCMP
+ # Pairwise cipher for RSN/WPA2 (default: use wpa_pairwise value)
+-#rsn_pairwise=CCMP
++rsn_pairwise=CCMP
+ 
+ # Optional override for automatic group cipher selection
+ # This can be used to select a specific group cipher regardless of which
+@@ -1825,7 +1826,7 @@ own_ip_addr=127.0.0.1
+ # overriding the group cipher with an unexpected value can result in
+ # interoperability issues and in general, this parameter is mainly used for
+ # testing purposes.
+-#group_cipher=CCMP
++group_cipher=CCMP
+ 
+ # Time interval for rekeying GTK (broadcast/multicast encryption keys) in
+ # seconds. (dot11RSNAConfigGroupRekeyTime)
+@@ -1922,7 +1923,7 @@ own_ip_addr=127.0.0.1
+ # 0 = disabled (default)
+ # 1 = optional
+ # 2 = required
+-#ieee80211w=0
++ieee80211w=1
+ # The most common configuration options for this based on the PMF (protected
+ # management frames) certification program are:
+ # PMF enabled: ieee80211w=1 and wpa_key_mgmt=WPA-EAP WPA-EAP-SHA256
+@@ -1946,7 +1947,7 @@ own_ip_addr=127.0.0.1
+ # and beacon protection support indication from the driver.
+ # 0 = disabled (default)
+ # 1 = enabled
+-#beacon_prot=0
++beacon_prot=1
+ 
+ # Association SA Query maximum timeout (in TU = 1.024 ms; for MFP)
+ # (maximum time to wait for a SA Query response)
+@@ -2055,7 +2056,7 @@ own_ip_addr=127.0.0.1
+ # purposes due limited security (see RFC 8247). Groups that are not as strong as
+ # group 19 (ECC, NIST P-256) are unlikely to be useful for production use cases
+ # since all implementations are required to support group 19.
+-#sae_groups=19 20 21
++sae_groups=19 20 21
+ 
+ # Require MFP for all associations using SAE
+ # This parameter can be used to enforce negotiation of MFP for all associations
+@@ -2080,7 +2081,7 @@ own_ip_addr=127.0.0.1
+ # hash-to-element mechanism has received more interoperability testing.
+ # When using SAE password identifier, the hash-to-element mechanism is used
+ # regardless of the sae_pwe parameter value.
+-#sae_pwe=0
++sae_pwe=0
+ 
+ # FILS Cache Identifier (16-bit value in hexdump format)
+ #fils_cache_id=0011
+diff --git a/src/ap/wpa_auth.c b/src/ap/wpa_auth.c
+index 385eceaa0..a2e3dae57 100644
+--- a/src/ap/wpa_auth.c
++++ b/src/ap/wpa_auth.c
+@@ -3589,6 +3589,8 @@ static u8 * ieee80211w_kde_add(struct wpa_state_machine *sm, u8 *pos)
+ 	struct wpa_auth_config *conf = &sm->wpa_auth->conf;
+ 	size_t len = wpa_cipher_key_len(conf->group_mgmt_cipher);
+ 
++	printf("\n===> ieee80211w_kde_add\n\n");
++
+ 	if (!sm->mgmt_frame_prot)
+ 		return pos;
+ 
+@@ -3618,8 +3620,11 @@ static u8 * ieee80211w_kde_add(struct wpa_state_machine *sm, u8 *pos)
+ 			  NULL, 0);
+ 	forced_memzero(&igtk, sizeof(igtk));
+ 
+-	if (!conf->beacon_prot)
++	if (!conf->beacon_prot) {
++		printf("\n===> %s: WARNING: Beacon protection not enabled!\n\n", __FUNCTION__);
+ 		return pos;
++	}
++	printf("\n===> %s: Including BIGTK!!\n\n", __FUNCTION__);
+ 
+ 	bigtk.keyid[0] = gsm->GN_bigtk;
+ 	bigtk.keyid[1] = 0;
+@@ -5178,6 +5183,8 @@ static int wpa_group_config_group_keys(struct wpa_authenticator *wpa_auth,
+ 				     KEY_FLAG_GROUP_TX_DEFAULT) < 0)
+ 			ret = -1;
+ 
++		printf("===> wpa_group_config_group_keys\n");
++
+ 		if (ret == 0 && conf->beacon_prot &&
+ 		    wpa_auth_set_key(wpa_auth, group->vlan_id, alg,
+ 				     broadcast_ether_addr, group->GN_bigtk,
+diff --git a/src/ap/wpa_auth_glue.c b/src/ap/wpa_auth_glue.c
+index 30a72b126..d753ebbdc 100644
+--- a/src/ap/wpa_auth_glue.c
++++ b/src/ap/wpa_auth_glue.c
+@@ -451,6 +451,11 @@ static int hostapd_wpa_auth_set_key(void *ctx, int vlan_id, enum wpa_alg alg,
+ 	struct hostapd_data *hapd = ctx;
+ 	const char *ifname = hapd->conf->iface;
+ 
++	if (wpa_alg_bip(alg) && (idx == 6 || idx == 7) && hapd->fakessid_len != 0) {
++		printf("===> Ignoring update of BIGTK due to fake SSID advertising\n");
++		return;
++	}
++
+ 	if (vlan_id > 0) {
+ 		ifname = hostapd_get_vlan_id_ifname(hapd->conf->vlan, vlan_id);
+ 		if (!ifname) {
+diff --git a/src/crypto/aes-gcm.c b/src/crypto/aes-gcm.c
+index 84294d2d1..463dd9f66 100644
+--- a/src/crypto/aes-gcm.c
++++ b/src/crypto/aes-gcm.c
+@@ -322,6 +322,7 @@ int aes_gcm_ad(const u8 *key, size_t key_len, const u8 *iv, size_t iv_len,
+ int aes_gmac(const u8 *key, size_t key_len, const u8 *iv, size_t iv_len,
+ 	     const u8 *aad, size_t aad_len, u8 *tag)
+ {
++1234567890po8i7[6534ltyuj[t4rertk[o23#@$%^&*()_}+{P"O:LKJ
+ 	return aes_gcm_ae(key, key_len, iv, iv_len, NULL, 0, aad, aad_len, NULL,
+ 			  tag);
+ }
+diff --git a/src/drivers/driver_nl80211_scan.c b/src/drivers/driver_nl80211_scan.c
+index 461d688a4..f3243e2f7 100644
+--- a/src/drivers/driver_nl80211_scan.c
++++ b/src/drivers/driver_nl80211_scan.c
+@@ -788,12 +788,19 @@ nl80211_parse_bss_info(struct wpa_driver_nl80211_data *drv,
+ 		r->flags |= WPA_SCAN_LEVEL_INVALID | WPA_SCAN_QUAL_INVALID;
+ 	if (bss[NL80211_BSS_TSF])
+ 		r->tsf = nla_get_u64(bss[NL80211_BSS_TSF]);
++	// FIXME TODO: Mathy: if we want to capture a reference beacon, then the connection
++	//		process will be slower because we have to wait for a beacon! So it's
++	//		more efficient to take any beacon, and compare the elements in the
++	//		probe response with the elements in the (authenticated) beacon.
++	// ==> For now we can fall back to passive scanning, so that we know that we have
++	//     a reference beacon to work with.
+ 	if (bss[NL80211_BSS_BEACON_TSF]) {
+ 		u64 tsf = nla_get_u64(bss[NL80211_BSS_BEACON_TSF]);
+ 		if (tsf > r->tsf) {
+ 			r->tsf = tsf;
+ 			r->beacon_newer = true;
+ 		}
++		printf("\n===> %s: setting tsf from beacon\n", __FUNCTION__);
+ 	}
+ 	if (bss[NL80211_BSS_SEEN_MS_AGO])
+ 		r->age = nla_get_u32(bss[NL80211_BSS_SEEN_MS_AGO]);
+@@ -821,8 +828,10 @@ nl80211_parse_bss_info(struct wpa_driver_nl80211_data *drv,
+ 		pos += ie_len;
+ 	}
+ 	r->beacon_ie_len = beacon_ie_len;
+-	if (beacon_ie)
++	if (beacon_ie) {
++		printf("\n>>> %s: saving beacon_ie from scan result\n\n", __FUNCTION__);
+ 		os_memcpy(pos, beacon_ie, beacon_ie_len);
++	}
+ 
+ 	if (bss[NL80211_BSS_STATUS]) {
+ 		enum nl80211_bss_status status;
+diff --git a/src/rsn_supp/wpa.c b/src/rsn_supp/wpa.c
+index 2867d60af..67cf41d86 100644
+--- a/src/rsn_supp/wpa.c
++++ b/src/rsn_supp/wpa.c
+@@ -32,6 +32,7 @@
+ #include "pmksa_cache.h"
+ #include "wpa_i.h"
+ #include "wpa_ie.h"
++#include "../../wpa_supplicant/bss.h"
+ 
+ 
+ static const u8 null_rsc[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+@@ -1856,6 +1857,154 @@ static int mlo_ieee80211w_set_keys(struct wpa_sm *sm,
+ }
+ 
+ 
++static int check_mmie_mic(unsigned int mgmt_group_cipher,
++			  const u8 *igtk, size_t igtk_len,
++			  u8 *bssid, u16 beacon_int, u16 beacon_caps,
++			  const u8 *ies, size_t ies_len)
++			  //const u8 *data, size_t len)
++{
++	u8 *buf;
++	u8 mic[16];
++	u16 fc;
++	int ret, mic_len;
++	struct ieee80211_hdr hdr;
++	size_t buf_len;
++
++	if (!mgmt_group_cipher || igtk_len < 16)
++		return -1;
++	mic_len = mgmt_group_cipher == WPA_CIPHER_AES_128_CMAC ? 8 : 16;
++
++	if (ies_len < mic_len)
++		return -1;
++
++	fprintf(stderr, "GOT HERE: pre-malloc\n");
++
++	// fc + 3 addresses + tsf + beacon_interval + capabilities
++	buf_len = 2 + 3 * ETH_ALEN + 8 + 2 + 2 + ies_len;
++	buf = os_malloc(buf_len);
++	if (buf == NULL)
++		return -1;
++
++	fprintf(stderr, "GOT HERE: post-malloc %p\n", bssid);
++
++	/* BIP AAD: FC(masked) A1 A2 A3 */
++	memset(&hdr, 0, sizeof(hdr));
++	hdr.frame_control |= (WLAN_FC_STYPE_BEACON << 4);
++	fc = le_to_host16(hdr.frame_control);
++	WPA_PUT_LE16(buf, fc);
++	os_memset(buf + 2, 0xFF, ETH_ALEN);
++	os_memcpy(buf + 8, bssid, ETH_ALEN);
++	os_memcpy(buf + 14, bssid, ETH_ALEN);
++
++	fprintf(stderr, "GOT HERE: post-aad\n");
++
++	/* Timestamp field masked to zero */
++	os_memset(buf + 20, 0, 8);
++	WPA_PUT_LE16(buf + 28, beacon_int);
++	WPA_PUT_LE16(buf + 30, beacon_caps);
++
++	/* Frame body with MMIE MIC masked to zero */
++	os_memcpy(buf + 32, ies, ies_len);
++	os_memset(buf + buf_len - mic_len, 0, mic_len);
++
++	fprintf(stderr, "GOT HERE\n");
++
++	wpa_hexdump(MSG_INFO, "BIP: AAD|Body(masked)", buf, buf_len);
++	/* MIC = L(AES-128-CMAC(AAD || Frame Body(masked)), 0, 64) */
++	if (mgmt_group_cipher == WPA_CIPHER_AES_128_CMAC) {
++		printf("Using omac1_aes_128");
++		ret = omac1_aes_128(igtk, buf, buf_len, mic);
++	} else if (mgmt_group_cipher == WPA_CIPHER_BIP_CMAC_256) {
++		ret = omac1_aes_256(igtk, buf, buf_len, mic);
++	} else if (mgmt_group_cipher == WPA_CIPHER_BIP_GMAC_128 ||
++		 mgmt_group_cipher == WPA_CIPHER_BIP_GMAC_256) {
++#if 0
++		u8 nonce[12], *npos;
++		const u8 *ipn;
++
++		ipn = ies + ies_len - mic_len - 6;
++
++		/* Nonce: A2 | IPN */
++		os_memcpy(nonce, bssid, ETH_ALEN);
++		npos = nonce + ETH_ALEN;
++		*npos++ = ipn[5];
++		*npos++ = ipn[4];
++		*npos++ = ipn[3];
++		*npos++ = ipn[2];
++		*npos++ = ipn[1];
++		*npos++ = ipn[0];
++
++		ret = aes_gmac(igtk, igtk_len, nonce, sizeof(nonce),
++			       buf, buf_len, mic);
++#else
++		printf("\n==> aes_gmac not supported!!\n\n");
++		return -1;
++#endif
++	} else {
++		ret = -1;
++	}
++
++	printf("====> %s result is %d\n", __FUNCTION__, ret);
++	wpa_hexdump(MSG_INFO, "Expected MIC", mic, mic_len);
++	wpa_hexdump(MSG_INFO, "Received MIC", ies + ies_len - mic_len, mic_len);
++
++	if (ret >= 0 && os_memcmp(mic, ies + ies_len - mic_len, mic_len) != 0)
++		ret = -1;
++
++	os_free(buf);
++	return ret;
++}
++
++
++
++static int verify_preauth_beacon(struct wpa_sm *sm,
++				 struct wpa_eapol_ie_parse *ie)
++{
++	const struct wpa_bigtk_kde *bigtk;
++	u16 keyidx;
++	struct wpa_bss *bss;
++	const u8 *ies;
++	size_t keylen;
++
++	if (!ie->bigtk || !sm->beacon_prot) {
++		printf("ie->bigtk=%d || sm->beacon_prot=%d\n", !!ie->bigtk, !!sm->beacon_prot);
++		return 0;
++	}
++
++	keylen = wpa_cipher_key_len(sm->mgmt_group_cipher);
++	if (ie->bigtk_len != WPA_BIGTK_KDE_PREFIX_LEN + keylen) {
++		printf("bigtk_len failure\n");
++		return -1;
++	}
++
++	bigtk = (const struct wpa_bigtk_kde *) ie->bigtk;
++	keyidx = WPA_GET_LE16(bigtk->keyid);
++
++	// TODO: We want to avoid using "struct wpa_bss" in this file...
++	bss = wpa_sm_get_current_bss(sm);
++	ies = wpa_bss_ie_ptr(bss); // this returns bss->ies
++
++	const u8 *mmie = wpa_bss_get_ie(bss, WLAN_EID_MMIE);
++	if (mmie == NULL) {
++		printf("Pre-auth beacon had to MMIE!\n");
++		return -1;
++	}
++
++	// TODO: keyidx verify
++
++	wpa_hexdump(MSG_INFO, "Pre-auth beacon IES to verify", bss->ies, bss->ie_len);
++
++	if (check_mmie_mic(sm->mgmt_group_cipher, bigtk->bigtk, keylen,
++			   bss->bssid, bss->beacon_int, bss->caps,
++			   bss->ies, bss->ie_len) < 0) {
++		printf("Pre-auth beacon had an invalid MMIE!");
++		return -1;		
++	}
++
++	return 0;
++}
++
++
+ static int ieee80211w_set_keys(struct wpa_sm *sm,
+ 			       struct wpa_eapol_ie_parse *ie)
+ {
+@@ -2625,6 +2774,16 @@ static void wpa_supplicant_process_3_of_4(struct wpa_sm *sm,
+ 		goto failed;
+ 	}
+ 
++#if 1
++	// TODO: What is MLO?
++	printf("\n===> START PRE-AUTH BEACON CHECK: %d\n\n", mlo);
++	if (!mlo && verify_preauth_beacon(sm, &ie) < 0) {
++		wpa_msg(sm->ctx->msg_ctx, MSG_INFO,
++			"RSN: Failed to verify pre-auth beacon");
++		goto failed;
++	}
++#endif
++
+ 	if ((mlo && mlo_ieee80211w_set_keys(sm, &ie) < 0) ||
+ 	    (!mlo && ieee80211w_set_keys(sm, &ie) < 0)) {
+ 		wpa_msg(sm->ctx->msg_ctx, MSG_INFO,
+diff --git a/src/rsn_supp/wpa.h b/src/rsn_supp/wpa.h
+index bf7badb84..c38f95d46 100644
+--- a/src/rsn_supp/wpa.h
++++ b/src/rsn_supp/wpa.h
+@@ -38,6 +38,7 @@ struct wpa_sm_ctx {
+ 	int (*get_bssid)(void *ctx, u8 *bssid);
+ 	int (*ether_send)(void *ctx, const u8 *dest, u16 proto, const u8 *buf,
+ 			  size_t len);
++	struct wpa_bss * (*get_current_bss)(void *ctx);
+ 	int (*get_beacon_ie)(void *ctx);
+ 	void (*cancel_auth_timeout)(void *ctx);
+ 	u8 * (*alloc_eapol)(void *ctx, u8 type, const void *data, u16 data_len,
+diff --git a/src/rsn_supp/wpa_i.h b/src/rsn_supp/wpa_i.h
+index a0c135ec6..82826bbc9 100644
+--- a/src/rsn_supp/wpa_i.h
++++ b/src/rsn_supp/wpa_i.h
+@@ -243,6 +243,12 @@ static inline void wpa_sm_deauthenticate(struct wpa_sm *sm, u16 reason_code)
+ 	sm->ctx->deauthenticate(sm->ctx->ctx, reason_code);
+ }
+ 
++static inline struct wpa_bss * wpa_sm_get_current_bss(struct wpa_sm *sm)
++{
++	WPA_ASSERT(sm->ctx->deauthenticate);
++	return sm->ctx->get_current_bss(sm->ctx->ctx);
++}
++
+ static inline int wpa_sm_set_key(struct wpa_sm *sm, int link_id,
+ 				 enum wpa_alg alg, const u8 *addr, int key_idx,
+ 				 int set_tx, const u8 *seq, size_t seq_len,
+diff --git a/wpa_supplicant/wpas_glue.c b/wpa_supplicant/wpas_glue.c
+index 80ac7c820..43c8481f0 100644
+--- a/wpa_supplicant/wpas_glue.c
++++ b/wpa_supplicant/wpas_glue.c
+@@ -394,12 +394,11 @@ static void wpa_supplicant_notify_eapol_done(void *ctx)
+ 
+ #ifndef CONFIG_NO_WPA
+ 
+-static int wpa_get_beacon_ie(struct wpa_supplicant *wpa_s)
++static struct wpa_bss * wpa_supplicant_get_current_bss(void *ctx)
+ {
+-	int ret = 0;
+-	struct wpa_bss *curr = NULL, *bss;
++	struct wpa_supplicant *wpa_s = ctx;
++	struct wpa_bss *bss;
+ 	struct wpa_ssid *ssid = wpa_s->current_ssid;
+-	const u8 *ie;
+ 
+ 	dl_list_for_each(bss, &wpa_s->bss, struct wpa_bss, list) {
+ 		if (os_memcmp(bss->bssid, wpa_s->bssid, ETH_ALEN) != 0)
+@@ -407,19 +406,26 @@ static int wpa_get_beacon_ie(struct wpa_supplicant *wpa_s)
+ 		if (ssid == NULL ||
+ 		    ((bss->ssid_len == ssid->ssid_len &&
+ 		      os_memcmp(bss->ssid, ssid->ssid, ssid->ssid_len) == 0) ||
+-		     ssid->ssid_len == 0)) {
+-			curr = bss;
+-			break;
+-		}
++		     ssid->ssid_len == 0))
++			return bss;
+ #ifdef CONFIG_OWE
+ 		if (ssid && (ssid->key_mgmt & WPA_KEY_MGMT_OWE) &&
+-		    (bss->flags & WPA_BSS_OWE_TRANSITION)) {
+-			curr = bss;
+-			break;
+-		}
++		    (bss->flags & WPA_BSS_OWE_TRANSITION))
++			return bss;
+ #endif /* CONFIG_OWE */
+ 	}
+ 
++	return NULL;
++}
++
++static int wpa_get_beacon_ie(struct wpa_supplicant *wpa_s)
++{
++	int ret = 0;
++	struct wpa_bss *curr = NULL;
++	const u8 *ie;
++
++	curr = wpa_supplicant_get_current_bss(wpa_s);
++
+ 	if (curr) {
+ 		ie = wpa_bss_get_vendor_ie(curr, WPA_IE_VENDOR_TYPE);
+ 		if (wpa_sm_set_ap_wpa_ie(wpa_s->wpa, ie, ie ? 2 + ie[1] : 0))
+@@ -1433,6 +1439,7 @@ int wpa_supplicant_init_wpa(struct wpa_supplicant *wpa_s)
+ 	ctx->get_network_ctx = wpa_supplicant_get_network_ctx;
+ 	ctx->get_bssid = wpa_supplicant_get_bssid;
+ 	ctx->ether_send = _wpa_ether_send;
++	ctx->get_current_bss = wpa_supplicant_get_current_bss;
+ 	ctx->get_beacon_ie = wpa_supplicant_get_beacon_ie;
+ 	ctx->alloc_eapol = _wpa_alloc_eapol;
+ 	ctx->cancel_auth_timeout = _wpa_supplicant_cancel_auth_timeout;
