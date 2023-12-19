@@ -382,6 +382,12 @@ Clients obtain this symmetric key in the \fourway{} handshake when connecting to
 When using beacon protection, an adversary is no longer able to change the SSID included in beacons \red{after the client has connected} (see stage~\circlenum{3} in Figure~\ref{fig:ssidconfusion}).
 This implies that an adversary would, in theory, be able to detect the SSID confusion attack \emph{after} being connected to the network.
 
+The downside of this defense is that the client must wait with (completing to connect) until a beacon is received, which is by default sent every 102.4ms.
+In our current proof-of-concept, we detect the network using passive scanning, which ensures that the client has received a reference beacon before connecting.
+A second downside is that the BIGTK might have changed between the time of storing the reference beacon and receiving the BIGTK in the 4-way handshake.
+To handle that case, the client would have to wait for a new authenticated beacon and then compare this beacon with the \red{pre-auth reference beacon}.
+\red{---TODO: Also discuss Multi-Link Operation (802.11be) impact on defense or not?---}
+
 \subsubsection{Experiments}
 
 \red{---Can we still perform the attack when beacon protection is being used? Probably yes, because the beacons only get verified once connected, at least by wpa\_supplicant.---}
