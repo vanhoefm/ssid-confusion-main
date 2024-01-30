@@ -2,6 +2,8 @@
 import glob, importlib, sys
 
 def main():
+	# Dictionary that maps the RADIUS's CommonName to a list
+	# of corresponding SSIDs.
 	servers = dict()
 
 	sys.path.append("data")
@@ -16,6 +18,9 @@ def main():
 		else:
 			servers[sn] += ssids
 
+	# This outputs networks with a different SSID but the
+	# same CommonName for the RADIUS server. So those SSIDs
+	# likely use the same credentials for authentication.
 	for sn in servers:
 		if len(servers[sn]) > 1:
 			print(sn, servers[sn])
