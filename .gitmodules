@@ -4,3 +4,6 @@
 [submodule "overleaf"]
 	path = overleaf
 	url = https://git.overleaf.com/659fe309087378b8be5b5d1a
+[submodule "followup-paper"]
+	path = followup-paper-overleaf
+	url = https://git@git.overleaf.com/6a0b421248496a7b58105bf8

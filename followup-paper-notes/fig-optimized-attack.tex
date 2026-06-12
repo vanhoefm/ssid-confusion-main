@@ -1,0 +1,130 @@
+% !TeX spellcheck = en_US
+\tikzset{cross/.style={cross out, draw=black,ultra thick, minimum size=15, inner sep=0pt, outer sep=0pt}, cross/.default={1pt}}
+
+\begin{figure}[h]
+	\centering
+	\begin{tikzpicture}
+		
+		% Definitions.
+		\tikzstyle{every node}=[
+		%font=\small,
+		inner sep=3pt,
+		%text height=1ex,
+		%text depth=.25ex,
+		%minimum height=0.40cm
+		]
+		\def\myarrow{Straight Barb[width=6.4pt,length=3.2pt]};
+		\def\StageDepth{0.30cm};
+		\def\StagePadding{0.30cm};
+		\def\BubbleShiftX{0.10cm};
+		\def\BubbleShiftY{0.10cm};
+		
+		% ---------- Header and Vertical Lines ---------
+		
+		\node[fill=green!15, draw,minimum height=0.5cm] (client) {Client (vulnerable)};
+		\node[fill=red!15, draw,minimum height=0.5cm,right=0.65cm of client.east] (attacker) {Attacker (MC-MitM)};
+		\node[fill=green!15, draw,minimum height=0.5cm,right=6.70cm of client.west] (ap) {WrongAP};
+		
+		\coordinate (clientTop) at ([xshift=0.1cm]client.south west);
+		\coordinate (attackerTop) at ([xshift=-0.5cm]attacker.south);
+		\coordinate (apTop) at ([xshift=-0.1cm]ap.south east);
+		
+		\def\TimelineSize{8.95cm} % Length of the vertical lines
+		\draw[-] (clientTop) -- ([yshift=-\TimelineSize]clientTop);
+		\draw[-] (attackerTop) -- ([yshift=-8.0cm]attackerTop);
+		\draw[-] (apTop) -- ([yshift=-\TimelineSize]apTop);
+		
+		% ------------ Location of Messages -----------
+		
+		\def\LineOffset{0.60cm}
+		\def\LineOffsetContextLines{0.10cm}
+		\def\LineMessageOffset{-0.10cm}
+		
+		\coordinate (line1) at ([yshift={-0.5cm}]clientTop);
+		\coordinate (line2) at ([yshift={-\LineOffset}]line1);
+		\coordinate (line3) at ([yshift={-0.45cm}]line2);
+		\coordinate (line4) at ([yshift={-\LineOffset}]line3);
+		\coordinate (line5) at ([yshift={-\LineOffset}]line4);
+		\coordinate (line6) at ([yshift={-0.45cm}]line5);
+		\coordinate (line7) at ([yshift={-\LineOffset-0.1cm}]line6);
+		\coordinate (line8) at ([yshift={-\LineOffset+0.1cm}]line7);
+		\coordinate (line9) at ([yshift={-\LineOffset-0.10cm}]line8);
+		\coordinate (line10) at ([yshift={-\LineOffset}]line9);
+		%\coordinate (line11) at ([yshift={-\LineOffset}]line10);
+		%\coordinate (line12) at ([yshift={-\LineOffset}]line11);
+		\coordinate (line13) at ([yshift={-\LineOffset}]line10);
+		\coordinate (line14) at ([yshift={-\LineOffset+0.10cm}]line13);
+		\coordinate (line15) at ([yshift={-\LineOffset-0.20cm}]line14);
+		\coordinate (line16) at ([yshift={-\LineOffset-0.20cm}]line14);
+		\coordinate (line17) at ([yshift={-\LineOffset}]line16);
+		\coordinate (line18) at ([yshift={-\LineOffset}]line17);
+		
+		% ================== STAGE 1 ==================
+		
+		% Connection.
+		% We don't mention that and SSID can be in the ProbeRequest since this is now rare in practise, and because then we would have to add a rewrite bubble already.
+		\msgFromClient{line1}{ProbeReq};
+		\msgToAP{line1}{ProbeReq}
+		
+		\msgFromAP{line2}{ProbeResp(WrongNet)}
+		\msgFromAP{line3}{Beacon(WrongNet)}
+		
+		\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line4node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]attackerTop |- line4) {Rewrite WrongNet to TrustedNet};
+		
+		\msgToClient{line5}{Probe Resp(TrustedNet)};
+		\msgToClient{line6}{Beacon(TrustedNet)};
+		
+		% Brackets for Stage.
+		\draw[densely dashed, color=gray, rounded corners=0.1cm]
+		([yshift=\StagePadding]line1 -| apTop) --
+		([yshift=\StagePadding,xshift=\StageDepth]line1 -| apTop) -- 
+		node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{1}}
+		([yshift=-\StagePadding,xshift=\StageDepth]line6 -| apTop) --
+		([yshift=-\StagePadding]line6 -| apTop);
+		
+		% =================
+		
+		\node[anchor=west,rounded corners=3pt,fill=white,draw] (line7node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]clientTop |- line7) {Connect to TrustedNet};
+		
+		\draw[{\myarrow}-{\myarrow}] (clientTop |- line8) -- node[fill=white,yshift=-0.02cm] {\emph{(Open) Authentication}} (apTop |- line8);
+		
+		\node[anchor=center,rounded corners=3pt,fill=red!15,draw] (line9node) at ([xshift=-\BubbleShiftX,yshift=-0.0cm]attackerTop |- line9) {Rewrite};
+		
+		\draw[-{\myarrow}] (clientTop |- line9) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocReq(TrustedNet)\phantom{a}} (line9node.west);
+		\draw[-{\myarrow}] (line9node.east) -- node[above,yshift=\LineMessageOffset,xshift=0.06cm] {AssocReq(WrongNet)\phantom{a}} (apTop |- line9);
+		
+		%\msgFromAP{line10}{AssocResp(WrongNet)};
+		%\msgToClient{line10}{AssocResp(TrustedNet)};
+		
+		\msgToClient{line10}{AssocResp};
+		\msgFromAP{line10}{AssocResp}
+		
+		% line11: rewrite
+		% line12: forward to client
+		
+		\draw[{\myarrow}-{\myarrow},dashed] (clientTop |- line13) -- node[fill=white,yshift=-0.02cm] {\emph{Optional 802.1X authentication}} (apTop |- line13);
+		
+		\draw[{\myarrow}-{\myarrow}] (clientTop |- line14) -- node[fill=white,yshift=-0.02cm] {\emph{\fourway{} handshake}} (apTop |- line14);
+		
+		% Brackets for Stage.
+		\draw[densely dashed, color=gray, rounded corners=0.1cm]
+		([yshift=\StagePadding]line7 -| apTop) --
+		([yshift=\StagePadding,xshift=\StageDepth]line7 -| apTop) -- 
+		node [midway,rotate=90,color=black,fill=white,draw=white,inner sep=1pt] {Stage~\circlenum{2}}
+		([yshift=-\StagePadding,xshift=\StageDepth]line14 -| apTop) --
+		([yshift=-\StagePadding]line14 -| apTop);
+		
+		% =================
+		
+		\draw[{\myarrow}-{\myarrow},dashed] (clientTop |- line14) -- node[fill=white,yshift=-0.03cm] {\emph{\fourway{} handshake}} (apTop |- line14);
+		
+		\msgToClient{line16}{Beacon(CSA)};
+		
+		\node[anchor=west,rounded corners=3pt,fill=white,draw] (line17node) at ([xshift=-\BubbleShiftX,yshift=\BubbleShiftY]clientTop |- line17) {Switch channels};
+		
+		\draw[{\myarrow}-{\myarrow}] (clientTop |- line18) -- node[fill=white,yshift=-0.02cm] {Direct frame exchanges with WrongAP} (apTop |- line18);
+		
+	\end{tikzpicture}
+	\caption{Optimized SSID confusion attack. After connecting, the adversary sends a Channel Switch Announcement~(CSA) to the victim. This causes the client to move to the same channel as WrongAP. As a result, the attacker no longer needs to be present, and the victim stays connected if it does not verify the SSID in the periodically transmitted beacon frames.}
+	\label{fig:ssidconfusion:optimized}
+\end{figure}
